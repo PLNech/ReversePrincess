@@ -5,8 +5,9 @@ from typing import Any
 import gradio as gr
 import ollama
 
-PROMPT_INTRO = ("You are a princess imprisoned in a dragon's dungeon castle! "
-                "And worse, your prince doesn't seem very good at saving anyone. "
+PROMPT_INTRO = ("The year is 2077 and the world is a cyberpunk utopia. "
+                "But you are a princess, and you're imprisoned in a dragon's dungeon castle! "
+                "And worse, your beloved prince got trapped - he doesn't seem so good at saving anyone, even his ass. "
                 "Can you escape the castle to go rescue this cute loser?"
                 "\n You start your journey in the following room:")
 SYSTEM = "You are a story generator."
@@ -79,10 +80,10 @@ def respond(button: str, chat_history, inventory: list[str]):
     try:
         prompt_specific_options = f"The story so far: {chat_history}. The inventory was: {inventory} and is now: {new_inventory}." \
                                   f"What can I do next, phrased from my first-person perspective? Give me three options: " \
-                                  f"the first one should be safe and boring. " \
-                                  f"the second one should be daring and adventurous. " \
-                                  f"the third one should be funky and wacky, try to be fun. " \
-                                  "Try to balance options to use different inventory items, when relevant. "
+                                  f"the first one should be safe, even if potentially dull. " \
+                                  f"the second one should be daring and more adventurous. " \
+                                  f"the third one should be funky and wacky, try to be fun if you can make a joke. " \
+                                  "Try to balance options to use different inventory items, when some are relevant. "
         options = make_options(prompt_specific_options)
         print(f"Buttons: {options}")
         assert len(options) == 3, "Bad options!"
@@ -91,7 +92,7 @@ def respond(button: str, chat_history, inventory: list[str]):
         raise
     chat_history.append((button, bot_message))
 
-    return options[0], options[1], options[2], chat_history, "\n".join(new_inventory)
+    return options[0], options[1], options[2], chat_history, "\n".join(["- " + n for n in new_inventory])
 
 
 if __name__ == '__main__':
@@ -102,7 +103,7 @@ if __name__ == '__main__':
         with gr.Row() as row1:
             chatbot = gr.Chatbot(label="Damsell in Prowess", value=[(None, PROMPT_INTRO)], scale=3)
             with gr.Column(scale=1) as col:
-                print("Loading initial inventory...", end="")
+                print("Loading initial inventory... ", end="")
                 stuff: list[str] = make_options(
                     "The princess has three objects with her: the first is a versatile tool, "
                     "the second an item of tremendous personal value, "
@@ -110,7 +111,7 @@ if __name__ == '__main__':
                 print(f"Stuff: {stuff}")
                 # FIXME: Replace with List? Dataframe? Any tabular data UI
                 inventory = gr.TextArea(label="Inventory",
-                                        value="\n".join(stuff),
+                                        value="\n".join(["- " + s for s in stuff]),
                                         scale=1)
 
         with gr.Row() as row2:
