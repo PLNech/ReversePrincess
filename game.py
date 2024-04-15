@@ -20,7 +20,7 @@ def vote(data: gr.LikeData):
         print("You downvoted this response: " + data.value)
 
 
-def oracle(question: str, is_json: bool = True) -> dict[str, Any]:
+def oracle(question: str, is_json: bool = True) -> str:
     response = ollama.chat(model="gemma", format="json" if is_json else "", messages=[
         {
             "role": "user",
@@ -30,20 +30,23 @@ def oracle(question: str, is_json: bool = True) -> dict[str, Any]:
     response: str = response["message"]
     # print(f"{question} -> {response}")
     content = response['content'] if "content" in response else response
-    return json.loads(content)
+    return content
 
 
-def make_options(input_prompt: str = None) -> list[str]:
+def make_options(input_prompt: str = None,
+                 retries: int = 3) -> list[str]:
     # options = ["ACTION 1", "ACTION 2", "ACTION 3"]
     prompt = (f"{SYSTEM} {input_prompt}. Generate three options and reply in JSON, "
               f"with your three options under the key 'options', as an array of strings.")
-    values = oracle(prompt)
-    assert 'options' in values, "MODEL IS STUPID"
-    return values['options']
+    for _ in range(retries):
+        values: dict[str, Any] = json.loads(oracle(prompt))
+        if 'options' in values:  # "MODEL IS STUPID"
+            return values['options']
+    raise SystemError(f"Failed to make options after {retries} retries...")
 
 
 def game_step(choice: str, inventory: list[str],
-              retries: int = 5) -> tuple[str, list[str]]:
+              retries: int = 3) -> tuple[str, list[str]]:
     # return random.choice(["How are you?", "I love you", "I'm very hungry"])
     for _ in range(retries):
         prompt = (f"The princess chose {choice}. Her inventory was {inventory}. "
@@ -52,10 +55,17 @@ def game_step(choice: str, inventory: list[str],
                   "Add a key 'inventory' with a list of strings describing her current inventory.")
         next_step = oracle(prompt)
         print(next_step)
-        if all([key in next_step for key in ["story"]]):
-            story: str = next_step["story"]
-            new_inventory: list[str] = next_step["inventory"]
-            return story, new_inventory
+        try:
+            next_step = json.loads(next_step)
+            if all([key in next_step for key in ["story", "inventory"]]):
+                story: str = next_step["story"]
+                new_inventory: list[str] = next_step["inventory"]
+                return story, new_inventory
+            else:
+                print(f"Missing story/inventory: {next_step}")
+        except (ValueError, TypeError, JSONDecodeError) as e:
+            print(f"Error {type(e)}: {e}")
+            continue
     raise SystemError(f"Failed to generate story+inventory after {retries} tries...")
 
 
@@ -64,6 +74,8 @@ def respond(button: str, inventory: list[str], chat_history):
     print(f"B:{button}")
     print(f"M:{bot_message}")
     print(f"NI:{new_inventory}")
+    if new_inventory is None or new_inventory[0] is "None":
+        new_inventory = inventory
     try:
         prompt_specific_options = f"The story so far: {chat_history}. The inventory was: {inventory} and is now: {new_inventory}." \
                                   f"What can I do next, phrased from my first-person perspective? Give me three options: " \
@@ -85,26 +97,31 @@ if __name__ == '__main__':
     import gradio as gr
 
     print("Running game!")
-    with gr.Blocks() as demo:
+    with gr.Blocks(title="Reverse Princess Simulator") as demo:
         with gr.Row() as row1:
             chatbot = gr.Chatbot(label="Damsell in Prowess", value=[(None, PROMPT_INTRO)], scale=3)
             with gr.Column(scale=1) as col:
-                stuff = make_options("The princess has three objects with her: the first is a versatile tool, "
-                                     "the second an item of tremendous personal value, "
-                                     "the third a surprising thing to have for a princess which makes the story fun.")
-                inventory = gr.List(label="Inventory",
-                                    value=[stuff],
-                                    interactive=False,
-                                    scale=1)
+                print("Loading initial inventory...", end="")
+                stuff: list[str] = make_options(
+                    "The princess has three objects with her: the first is a versatile tool, "
+                    "the second an item of tremendous personal value, "
+                    "the third a surprising thing to have for a princess which makes the story fun.")
+                print(f"Stuff: {stuff}")
+                # FIXME: Replace with List? Dataframe? Any tabular data UI
+                inventory = gr.Dropdown(label="Inventory",
+                                        choices=stuff,
+                                        value=stuff[0],
+                                        scale=1)
 
         with gr.Row() as row2:
-            options = make_options("The story starts with just three options of rooms in the castle "
-                                   "where the princess could be.")
+            print("Loading initial choice... ", end="")
+            options = make_options(PROMPT_INTRO + " The story starts with just three options of rooms in the castle "
+                                                  "where the princess could be locked in.")
             print(f"Buttons: {options}")
 
-            action1 = gr.Button(f"The story starts in {options[0]}. ")
-            action2 = gr.Button(f"The story starts in {options[1]}. ")
-            action3 = gr.Button(f"The story starts in {options[2]}. ")
+            action1 = gr.Button(f"Once upon a time, the princess was locked in {options[0]}. ")
+            action2 = gr.Button(f"Once upon a time, the princess was locked in {options[1]}. ")
+            action3 = gr.Button(f"Once upon a time, the princess was locked in {options[2]}. ")
 
         action1.click(respond, [action1, inventory, chatbot], [action1, action2, action3, chatbot, inventory])
         action2.click(respond, [action2, inventory, chatbot], [action1, action2, action3, chatbot, inventory])
