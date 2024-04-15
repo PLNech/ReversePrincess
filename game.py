@@ -52,7 +52,7 @@ def game_step(choice: str, inventory: list[str],
         prompt = (f"The princess chose {choice}. Her inventory was {inventory}. "
                   f"What happens next to her? Don't mention the choice, just the action and consequences. "
                   f"Reply in a short, descriptive sentence, as a string under the key 'story'. "
-                  "Add a key 'inventory' with a list of strings describing her current inventory.")
+                  "Add a key 'inventory' with a list of strings describing her updated inventory.")
         next_step = oracle(prompt)
         print(next_step)
         try:
@@ -81,7 +81,8 @@ def respond(button: str, inventory: list[str], chat_history):
                                   f"What can I do next, phrased from my first-person perspective? Give me three options: " \
                                   f"the first one should be safe and boring. " \
                                   f"the second one should be daring and adventurous. " \
-                                  f"the third one should be funky and wacky and fun if there is a way to make a joke. "
+                                  f"the third one should be funky and wacky, try to be fun. " \
+                                  "Try to balance options to use different inventory items, when relevant. "
         options = make_options(prompt_specific_options)
         print(f"Buttons: {options}")
         assert len(options) == 3, "Bad options!"
@@ -127,6 +128,6 @@ if __name__ == '__main__':
         action2.click(respond, [action2, inventory, chatbot], [action1, action2, action3, chatbot, inventory])
         action3.click(respond, [action3, inventory, chatbot], [action1, action2, action3, chatbot, inventory])
 
-        chatbot.like(vote, None, None)
+        # chatbot.like(vote, None, None)
     demo.queue()
     demo.launch()
