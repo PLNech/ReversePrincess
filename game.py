@@ -69,12 +69,12 @@ def game_step(choice: str, inventory: list[str],
     raise SystemError(f"Failed to generate story+inventory after {retries} tries...")
 
 
-def respond(button: str, inventory: list[str], chat_history):
+def respond(button: str, chat_history, inventory: list[str]):
     bot_message, new_inventory = game_step(button, inventory)
-    print(f"B:{button}")
-    print(f"M:{bot_message}")
-    print(f"NI:{new_inventory}")
-    if new_inventory is None or new_inventory[0] is "None":
+    print(f"C  Choice:{button}")
+    print(f"S  Story:{bot_message}")
+    print(f"NI New Inventory:{new_inventory}")
+    if new_inventory is None or new_inventory[0] == "None":
         new_inventory = inventory
     try:
         prompt_specific_options = f"The story so far: {chat_history}. The inventory was: {inventory} and is now: {new_inventory}." \
@@ -91,7 +91,7 @@ def respond(button: str, inventory: list[str], chat_history):
         raise
     chat_history.append((button, bot_message))
 
-    return options[0], options[1], options[2], chat_history, new_inventory
+    return options[0], options[1], options[2], chat_history, "\n".join(new_inventory)
 
 
 if __name__ == '__main__':
@@ -109,9 +109,8 @@ if __name__ == '__main__':
                     "the third a surprising thing to have for a princess which makes the story fun.")
                 print(f"Stuff: {stuff}")
                 # FIXME: Replace with List? Dataframe? Any tabular data UI
-                inventory = gr.Dropdown(label="Inventory",
-                                        choices=stuff,
-                                        value=stuff[0],
+                inventory = gr.TextArea(label="Inventory",
+                                        value="\n".join(stuff),
                                         scale=1)
 
         with gr.Row() as row2:
@@ -124,9 +123,9 @@ if __name__ == '__main__':
             action2 = gr.Button(f"Once upon a time, the princess was locked in {options[1]}. ")
             action3 = gr.Button(f"Once upon a time, the princess was locked in {options[2]}. ")
 
-        action1.click(respond, [action1, inventory, chatbot], [action1, action2, action3, chatbot, inventory])
-        action2.click(respond, [action2, inventory, chatbot], [action1, action2, action3, chatbot, inventory])
-        action3.click(respond, [action3, inventory, chatbot], [action1, action2, action3, chatbot, inventory])
+        action1.click(respond, [action1, chatbot, inventory], [action1, action2, action3, chatbot, inventory])
+        action2.click(respond, [action2, chatbot, inventory], [action1, action2, action3, chatbot, inventory])
+        action3.click(respond, [action3, chatbot, inventory], [action1, action2, action3, chatbot, inventory])
 
         # chatbot.like(vote, None, None)
     demo.queue()
