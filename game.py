@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     print("Running game!")
     with gr.Blocks() as demo:
-        chatbot = gr.Chatbot(value=[(None, PROMPT_INTRO)])
+        chatbot = gr.Chatbot(label="Damsell in Prowess", value=[(None, PROMPT_INTRO)])
         with gr.Row() as row:
             options = make_options("The story starts with just three options of rooms in the castle "
                                    "where the princess could be.")
@@ -77,7 +77,11 @@ if __name__ == '__main__':
             try:
                 options = make_options(
                     f"The story so far: {chat_history}. "
-                    f"What can I do next, phrased from my perspective?")
+                    f"What can I do next, phrased from my perspective? Give me three options: "
+                    f"the first one should be safe and boring. "
+                    f"the second one should be daring and adventurous. "
+                    f"the third one should be funky and wacky and fun if there is a way to make a joke. "
+                )
                 print(f"Buttons: {options}")
                 assert len(options) == 3, "Bad options!"
             except [AssertionError, JSONDecodeError] as e:
