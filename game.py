@@ -1,4 +1,5 @@
 import json
+from functools import lru_cache
 from json import JSONDecodeError
 from typing import Any
 
@@ -24,9 +25,38 @@ def vote(data: gr.LikeData):
         print("You downvoted this response: " + data.value)
 
 
+model_preferences = [  # Ordered by storytelling capability, prove me wrong
+    "llama3:70b-text-q2_K ",
+    "llama3:latest",
+    "dolphin-mistral:latest",
+    "dolphin-mistral:7b-v2-q3_K_S",
+    "gemma:latest",
+    "gemma:7b",
+    "llama2-uncensored:70b",
+    "llama2-uncensored:latest",
+    "stablelm2:latest",
+    "wizard-vicuna-uncensored:30b",
+    "zephyr:latest"
+]
+
+
+@lru_cache(maxsize=1)
+def choose_model() -> str:
+    print("Choosing model...")
+    models = ollama.list()
+    local_models = [m["name"] for m in
+                    sorted(models["models"], key=lambda m: m["details"]["parameter_size"], reverse=True)]
+
+    for choice in model_preferences:
+        if choice in local_models:
+            print(f"Found preferred model {choice}!")
+            return choice
+    print("No preferred model available, returning your local model with highes # of parameters.")
+    return local_models[0]
+
+
 def oracle(question: str, is_json: bool = True) -> str:
-    model_name = "dolphin-mistral:7b-v2-q3_K_S"
-    model_name = "llama3"
+    model_name = choose_model()
     response = ollama.chat(model=model_name, format="json" if is_json else "", messages=[
         {
             "role": "user",
@@ -34,7 +64,6 @@ def oracle(question: str, is_json: bool = True) -> str:
         },
     ])
     response: [dict, str] = response["message"]
-    # print(f"{question} -> {response}")
     content = response["content"] if "content" in response else response
     clean = content.strip("\n ")
     return clean
