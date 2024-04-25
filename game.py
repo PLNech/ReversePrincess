@@ -7,7 +7,7 @@ import gradio as gr
 import ollama
 
 PROMPT_INTRO = ("The year is 2077 and the world is a cyberpunk utopia. "
-                "But you are a princess, and you're imprisoned in a cyberdragon's dungeon cyber castle! "
+                "But you are a princess, and you're imprisoned in a dragon's dungeon in his virtual reality castle! "
                 "And worse, your beloved prince got trapped - he doesn't seem so good at saving anyone, even his ass. "
                 "Can you escape the castle to go rescue this cute loser?"
                 "\n You start your journey in the following room:")
@@ -74,30 +74,32 @@ def make_options(input_prompt: str = None,
     # options = ["ACTION 1", "ACTION 2", "ACTION 3"]
     prompt = (f"{SYSTEM} {input_prompt}. Generate three options and reply in JSON, "
               f"with your three options under the key 'options', as an array of strings. Don't use the word 'option'.")
+    print(f"P[{prompt}]->")
     for _ in range(retries):
         oracle_response = oracle(prompt)
         values: dict[str, Any] = json.loads(oracle_response)
-        if 'options' in values:  # "MODEL IS STUPID"
-            print(f"{prompt}\n->\n{oracle_response}")  # DEBUG
-            return values['options'], oracle_response
+        if "options" in values:  # "MODEL IS STUPID"
+            print(f"\n->{oracle_response}")
+            return values["options"], oracle_response
     raise SystemError(f"Failed to make options after {retries} retries...")
 
 
 def game_step(choice: str, inventory: list[str],
               retries: int = 5) -> tuple[str, list[str]]:
     for _ in range(retries):
-        example_response = {'story':
-                                'You unlock the door and see a room full of books.',
-                            'inventory': ['A weirdly-shaped golden key', 'Your map of the underground networks',
-                                          'A mirror connected to the world\'s magic information field']}
+        example_response = {"story":
+                                "You unlock the door and see a room full of books.",
+                            "inventory": ["A weirdly-shaped golden key", "Your map of the underground networks",
+                                          "A mirror connected to the world\'s magic information field"]}
         prompt = (f"The princess chose {choice}. Her inventory was {inventory}. "
                   f"What happens next to her? Don't mention the choice, just the action and consequences. "
                   f"Reply in a short, descriptive sentence, as a string under the key 'story'. "
                   "If she gets or loses an item as a consequence, add an 'inventory' key "
                   "with an updated list of strings describing her belongings she currently holds. "
                   f"Example response: {json.dumps(example_response)}")
+        print(f"{prompt}")
         next_step: str = oracle(prompt)
-        print(next_step)
+        print(f"->{next_step}")
         try:
             next_data: dict[str, Any] = json.loads(next_step)
             if all([key in next_step for key in ["story", "inventory"]]):
@@ -123,7 +125,7 @@ def respond(choice: str, chat_history, inventory: list[str]):
         new_inventory = inventory
     try:
         prompt_specific_options = f"The story so far: {chat_history}. My choice is now: {choice}. " \
-                                  "The inventory was: {inventory} and is now: {new_inventory}. " \
+                                  f"The inventory was: {inventory} and is now: {new_inventory}. " \
                                   f"What can I do next, phrased from my first-person perspective? " \
                                   f"Give me three options: the first one should be safe, even if potentially dull. " \
                                   f"the second one should be daring and more adventurous. " \
@@ -133,8 +135,8 @@ def respond(choice: str, chat_history, inventory: list[str]):
         options, json_str = make_options(prompt_specific_options)
         print(f"Buttons: {options}")
         assert len(options) == 3, "Bad options!"
-    except [AssertionError, JSONDecodeError] as e:
-        print(f"Bad options! {options}")
+    except [AssertionError, JSONDecodeError] as exc:
+        print(f"Bad options! {exc} -> {options}")
         raise
     chat_history.append((choice, bot_message))
 
@@ -150,7 +152,6 @@ if __name__ == '__main__':
     import gradio as gr
 
     print("Running game!")
-
 
     print("Loading initial inventory... ", end="")
     if DEBUG_LOCAL_INIT:
@@ -189,16 +190,16 @@ if __name__ == '__main__':
 
             with gr.Column(scale=1) as col2:  # Infos & Metadata
                 # FIXME: Replace with List? Dataframe? Any tabular data UI
-                inventory = gr.TextArea(label="Inventory",
-                                        value="\n".join(["- " + s for s in stuff]),
-                                        scale=1)
+                inventory_view = gr.TextArea(label="Inventory",
+                                             value="\n".join(["- " + s for s in stuff]),
+                                             scale=1)
                 json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
 
         # Interactions must be mapped inside a gradio.Blocks context
-        outputs = [action1, action2, action3, chatbot, inventory, json_view]
-        action1.click(respond, [action1, chatbot, inventory], outputs)
-        action2.click(respond, [action2, chatbot, inventory], outputs)
-        action3.click(respond, [action3, chatbot, inventory], outputs)
+        outputs = [action1, action2, action3, chatbot, inventory_view, json_view]
+        action1.click(respond, [action1, chatbot, inventory_view], outputs)
+        action2.click(respond, [action2, chatbot, inventory_view], outputs)
+        action3.click(respond, [action3, chatbot, inventory_view], outputs)
 
     # chatbot.like(vote, None, None)
     demo.queue()
