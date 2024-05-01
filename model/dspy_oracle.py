@@ -50,13 +50,12 @@ def main_dspy():
     print(f"Gen response: {pred.response}")
 
     train = [
-        ('Who was the director of the 2009 movie featuring Peter Outerbridge as William Easton?', 'Kevin Greutert'),
-        ('The heir to the Du Pont family fortune sponsored what wrestling team?', 'Foxcatcher'),
         ('In what year was the star of To Hell and Back born?', '1925'),
-        ('Which award did the first book of Gary Zukav receive?', 'U.S. National Book Award'),
+        # ('Which award did the first book of Gary Zukav receive?', 'U.S. National Book Award'),
         ('What documentary about the Gilgo Beach Killer debuted on A&E?', 'The Killing Season'),
-        ('Which author is English: John Braine or Studs Terkel?', 'John Braine'),
-        ('Who produced the album that included a re-recording of "Lithium"?', 'Butch Vig')]
+        # ('Which author is English: John Braine or Studs Terkel?', 'John Braine'),
+        # ('Who produced the album that included a re-recording of "Lithium"?', 'Butch Vig')
+    ]
 
     train = [dspy.Example(question=question, answer=answer).with_inputs('question') for question, answer in train]
 
@@ -97,26 +96,6 @@ def main_dspy():
     evaluate_hotpot(cot_compiled)
 
 
-class JudgeSimilarity:
-    def __init__(self):
-        self.web = WebBertSimilarity(device='cpu', batch_size=10)
-        # TODO: Compare
-        # self.clinical = ClinicalBertSimilarity(device='cpu', batch_size=10)
-
-    def similarity(self, a: str, b: str) -> float:
-        x = [(a, b)]
-        scores: list[float] = self.web.predict(x)
-        return scores[0]
-
-
 if __name__ == '__main__':
     print("YO Pythonista")
-    # main_dspy()
-    from semantic_text_similarity.models import WebBertSimilarity
-    from semantic_text_similarity.models import ClinicalBertSimilarity
-
-    web_model = WebBertSimilarity(device='cpu', batch_size=10)
-    clinical_model = ClinicalBertSimilarity(device='cpu', batch_size=10)
-
-    w = web_model.predict([("She won an olympic gold medal", "The women is an olympic champion")])
-    c = clinical_model.predict([("She won an olympic gold medal", "The women is an olympic champion")])
+    main_dspy()
