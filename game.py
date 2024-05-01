@@ -151,6 +151,8 @@ def respond(choice: str, chat_history, inventory: list[str]):
 if __name__ == '__main__':
     import gradio as gr
 
+    gr.set_static_paths(paths=["static/"])
+
     print("Running game!")
 
     print("Loading initial inventory... ", end="")
@@ -179,7 +181,8 @@ if __name__ == '__main__':
     print(f"Buttons: {options}")
 
     # UI
-    with gr.Blocks(title="Reverse Princess Simulator", css="footer{display:none !important}") as demo:
+    with gr.Blocks(title="Reverse Princess Simulator", css="footer{display:none !important}",
+                   theme=gr.themes.Soft()) as demo:
         with gr.Row() as body:  # Outer layout is horizontal
             with gr.Column(scale=4) as col1:  # Story & Choices
                 chatbot = gr.Chatbot(label="Damsell in Prowess", value=[(None, PROMPT_INTRO)], scale=3)
@@ -203,4 +206,4 @@ if __name__ == '__main__':
 
     # chatbot.like(vote, None, None)
     demo.queue()
-    demo.launch()
+    demo.launch(allowed_paths=["static/"], favicon_path="static/princess.ico")
