@@ -1,4 +1,7 @@
+import datetime
 import json
+import time
+from dataclasses import dataclass
 from functools import lru_cache
 from json import JSONDecodeError
 from typing import Any
@@ -6,8 +9,8 @@ from typing import Any
 import gradio as gr
 import ollama
 
-PROMPT_INTRO = ("The year is 2077 and the world is a cyberpunk utopia. "
-                "But you are a princess, and you're imprisoned in a dragon's dungeon in his virtual reality castle! "
+PROMPT_INTRO = ("The year is 1900 and the whole western world is delighted by the Paris _Exposition Universelle_. "
+                "But you are a princess, and you're imprisoned by a bad guy in a Hotel Particulier in Paris!"
                 "And worse, your beloved prince got trapped - he doesn't seem so good at saving anyone, even his ass. "
                 "Can you escape the castle to go rescue this cute loser?"
                 "\n You start your journey in the following room:")
@@ -69,8 +72,23 @@ def oracle(question: str, is_json: bool = True) -> str:
     return clean
 
 
+@dataclass
+class Generation:
+    prompt: str
+    response: str
+    extra: dict[str, Any]
+
+
+def save_options(prompt: str, response: str, extra: dict) -> None:
+    data = Generation(prompt, response, extra)
+    timestamp = int(datetime.datetime.now().timestamp())
+    with open(f"generated/{timestamp}.json", "w") as file:
+        json.dump(data.__dict__, file)
+
+
 def make_options(input_prompt: str = None,
-                 retries: int = 3) -> [list[str], str]:
+                 retries: int = 3,
+                 save: bool = True) -> [list[str], str]:
     # options = ["ACTION 1", "ACTION 2", "ACTION 3"]
     prompt = (f"{SYSTEM} {input_prompt}. Generate three options and reply in JSON, "
               f"with your three options under the key 'options', as an array of strings. Don't use the word 'option'.")
@@ -78,8 +96,10 @@ def make_options(input_prompt: str = None,
     for _ in range(retries):
         oracle_response = oracle(prompt)
         values: dict[str, Any] = json.loads(oracle_response)
-        if "options" in values:  # "MODEL IS STUPID"
+        if "options" in values:  # "MODEL MAY BE STUPID"
             print(f"\n->{oracle_response}")
+            if save:
+                save_options(prompt, oracle_response, {"options": values["options"]})
             return values["options"], oracle_response
     raise SystemError(f"Failed to make options after {retries} retries...")
 
@@ -185,7 +205,9 @@ if __name__ == '__main__':
                    theme=gr.themes.Soft()) as demo:
         with gr.Row() as body:  # Outer layout is horizontal
             with gr.Column(scale=4) as col1:  # Story & Choices
-                chatbot = gr.Chatbot(label="Damsell in Prowess", value=[(None, PROMPT_INTRO)], scale=3)
+                # noinspection PyTypeChecker
+                # Type is wrong, see chatbot.py:221 :)
+                chatbot = gr.Chatbot(label="Damsell in Prowess", value=[("", PROMPT_INTRO)], scale=3)  # mypy: ignore
                 with gr.Row() as buttons:  # Options
                     action1 = gr.Button(f"{BUTTON_BEGIN} {options[0]}.")
                     action2 = gr.Button(f"{BUTTON_BEGIN} {options[1]}.")
