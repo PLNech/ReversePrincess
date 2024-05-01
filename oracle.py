@@ -1,5 +1,6 @@
-import ollama
 from functools import lru_cache
+
+import ollama
 
 model_preferences = [  # Ordered by storytelling capability, prove me wrong
     "dolphin-mistral:latest",
@@ -40,6 +41,12 @@ def choose_model() -> str:
 class Oracle:
     @staticmethod
     def predict(prompt: str, is_json: bool = False) -> tuple[str, str]:
+        """
+        Returns a prediction and its raw source.
+        :param prompt: input
+        :param is_json: if true return Json stp
+        :return: a tuple: prediction, raw response.
+        """
         response = ollama.chat(
             model=choose_model(),
             format="json" if is_json else "",

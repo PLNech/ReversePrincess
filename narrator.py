@@ -1,9 +1,10 @@
 import json
+import random
 from json import JSONDecodeError
 from typing import Any
-import random
-from Oracle import Oracle
-from GameState import GameState
+
+from state import GameState
+from oracle import Oracle
 
 
 class GameNarrator:
@@ -43,8 +44,7 @@ class GameNarrator:
         )
 
     @staticmethod
-    def generate_options(situation: str = None, retries: int = 3) -> tuple[Any, str]:
-        # options = ["ACTION 1", "ACTION 2", "ACTION 3"]
+    def generate_options(situation: str = None, retries: int = 3) -> tuple[list[str], str]:
         prompt = (
             f"{GameNarrator._PRE_PROMPT}"
             f"The princess current situation is the following:\n"
@@ -53,25 +53,27 @@ class GameNarrator:
             f"with your three options under the key 'options', as an array of strings. "
             f"Every option should be short, under 10 words. "
             f"For example :\n"
-            '{"options": ["She tries to open the cell door", "She looks around for a solution", "She waits for an opportunity"]}'
+            '{"options": ["She tries to open the cell door.", "She looks around for a solution.", "She waits for an opportunity."]}'
         )
         for _ in range(retries):
             try:
                 options, response = Oracle.predict(prompt)
                 values: dict[str, Any] = json.loads(options)
                 if "options" in values:  # "MODEL IS STUPID"
+                    assert type(values["options"]) is list and type(values["options"][0]) is str
                     return values["options"], response
-            except JSONDecodeError:
-                print("json.loads failed")
-        raise SystemError(f"Failed to make options after {retries} retries...")
+            except (JSONDecodeError, AssertionError, IndexError) as exc:
+                print(f"Validation failed: {exc}")
+                continue
+        raise SystemError(f"Failed to generate options after {retries} retries...")
 
     @staticmethod
     def describe_action_result(game_state: GameState, action: str) -> tuple[str, str]:
         result = random.randint(0, 10)
         if result > 9:
-            result = "This action work even better than expected !"
+            result = "This action works even better than expected !"
         elif result > 0:
-            result = "This action work as intended."
+            result = "This action works as intended."
         else:
             result = (
                 "This action doesn't work at all, putting the princess in difficulty."

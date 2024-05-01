@@ -1,14 +1,13 @@
 import datetime
 import json
-import time
-from typing import Any
 from dataclasses import dataclass
-from functools import lru_cache
-from json import JSONDecodeError
-from GameState import GameState
-from GameNarrator import GameNarrator
+from typing import Any, Optional
+
 import gradio as gr
-import ollama
+
+from narrator import GameNarrator
+from oracle import choose_model
+from state import GameState
 
 PROMPT_INTRO = (
     "The year is 1900 and the whole western world is delighted by the Paris _Exposition Universelle_. "
@@ -21,6 +20,7 @@ SYSTEM = "You are a story generator."
 BUTTON_BEGIN = "Once upon a time, the princess was locked in"
 
 DEBUG_LOCAL_INIT = False
+SAVE = True
 
 
 def vote(data: gr.LikeData):
@@ -35,25 +35,28 @@ def vote(data: gr.LikeData):
 class Generation:
     prompt: str
     response: str
+    model: str
     extra: dict[str, Any]
 
 
-def save_options(prompt: str, response: str, extra: dict) -> None:
-    data = Generation(prompt, response, extra)
+def save_generation(prompt: str, response: str, model: Optional[str] = None, extra: Optional[dict] = None) -> None:
+    if model is None:
+        model = choose_model()
+    data = Generation(prompt, response, model, extra)
     timestamp = int(datetime.datetime.now().timestamp())
     with open(f"generated/{timestamp}.json", "w") as file:
         json.dump(data.__dict__, file)
 
 
-def respond(button: str, chat_history, situation, json_view):
+def respond(button: str, chat_history, game_state):
     action_result = GameNarrator.describe_action_result(game_state, button)
     chat_history.append((button, action_result))
 
-    current_situation = GameNarrator.describe_current_situation(game_state)
+    current_situation, _ = GameNarrator.describe_current_situation(game_state)
     chat_history.append((None, current_situation))
 
-    location = GameNarrator.current_location(game_state)
-    objective = GameNarrator.current_objective(game_state)
+    location, _ = GameNarrator.current_location(game_state)
+    objective, _ = GameNarrator.current_objective(game_state)
     game_state.update([action_result, current_situation], location, objective)
 
     situation = GameNarrator.display_information(game_state)
@@ -83,7 +86,7 @@ if __name__ == "__main__":
 
         with gr.Row() as row2:
             print("Loading initial choice... ", end="")
-            current_situation = GameNarrator.describe_current_situation(game_state)
+            current_situation, _ = GameNarrator.describe_current_situation(game_state)
             options, json_str = GameNarrator.generate_options(current_situation)
             print(f"Buttons: {options}")
 
@@ -92,22 +95,11 @@ if __name__ == "__main__":
             action3 = gr.Button(f"{options[2]}")
 
         outputs = [action1, action2, action3, chatbot, situation, json_view]
+        shared_inputs = [chatbot, situation, game_state]
 
-        action1.click(
-            respond,
-            [action1, chatbot, situation, json_view],
-            outputs,
-        )
-        action2.click(
-            respond,
-            [action2, chatbot, situation, json_view],
-            outputs,
-        )
-        action3.click(
-            respond,
-            [action3, chatbot, situation, json_view],
-            outputs,
-        )
+        action1.click(respond, [action1, *shared_inputs], outputs)
+        action2.click(respond, [action2, *shared_inputs], outputs)
+        action3.click(respond, [action3, *shared_inputs], outputs)
 
         # chatbot.like(vote, None, None)
     demo.queue()
