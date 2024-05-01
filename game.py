@@ -48,26 +48,39 @@ def save_generation(prompt: str, response: str, model: Optional[str] = None, ext
         json.dump(data.__dict__, file)
 
 
-def respond(button: str, chat_history, game_state):
-    action_result = GameNarrator.describe_action_result(game_state, button)
+def respond(button: str, chat_history, json_src):
+    print(f"Choice: {button}")
+    yield button, button, button, chat_history, "", json_src
+
+    action_result, _ = GameNarrator.describe_action_result(game_state, button)
     chat_history.append((button, action_result))
+    yield button, button, button, chat_history, "", json_src
 
     current_situation, _ = GameNarrator.describe_current_situation(game_state)
     chat_history.append((None, current_situation))
+    yield button, button, button, chat_history, "", json_src
 
     location, _ = GameNarrator.current_location(game_state)
     objective, _ = GameNarrator.current_objective(game_state)
     game_state.update([action_result, current_situation], location, objective)
 
     situation = GameNarrator.display_information(game_state)
-    options, response = GameNarrator.generate_options(game_state)
-    json_view = response
-    return options[0], options[1], options[2], chat_history, situation, json_view
+    options, response = GameNarrator.generate_options(situation)
+
+    yield options[0], options[1], options[2], chat_history, situation, response
 
 
 if __name__ == "__main__":
     print("Running game!")
     game_state = GameState(GameNarrator.introduction)
+
+    if DEBUG_LOCAL_INIT:
+        current_situation = GameNarrator.introduction
+        options = ["Do a barrel roll", "Dance him to death", "What would Jesus do???"]
+        json_str = json.dumps(options)
+    else:
+        current_situation, _ = GameNarrator.describe_current_situation(game_state)
+        options, json_str = GameNarrator.generate_options(current_situation)
 
     with gr.Blocks(title="Reverse Princess Simulator") as demo:
         with gr.Row() as row1:
@@ -75,6 +88,7 @@ if __name__ == "__main__":
                 label="Damsell in Prowess",
                 value=[[None, GameNarrator.introduction]],
                 scale=3,
+                height=768,
             )
             with gr.Column(scale=1) as col:
                 situation = gr.TextArea(
@@ -82,12 +96,10 @@ if __name__ == "__main__":
                     value=(GameNarrator.display_information(game_state)),
                     scale=1,
                 )
-                json_view = gr.Json(value=None, label="Last oracle reply", scale=2)
+                json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
 
         with gr.Row() as row2:
             print("Loading initial choice... ", end="")
-            current_situation, _ = GameNarrator.describe_current_situation(game_state)
-            options, json_str = GameNarrator.generate_options(current_situation)
             print(f"Buttons: {options}")
 
             action1 = gr.Button(f"{options[0]}")
@@ -95,12 +107,10 @@ if __name__ == "__main__":
             action3 = gr.Button(f"{options[2]}")
 
         outputs = [action1, action2, action3, chatbot, situation, json_view]
-        shared_inputs = [chatbot, situation, game_state]
 
-        action1.click(respond, [action1, *shared_inputs], outputs)
-        action2.click(respond, [action2, *shared_inputs], outputs)
-        action3.click(respond, [action3, *shared_inputs], outputs)
+        action1.click(respond, [action1, chatbot, json_view], outputs)
+        action2.click(respond, [action2, chatbot, json_view], outputs)
+        action3.click(respond, [action3, chatbot, json_view], outputs)
 
-        # chatbot.like(vote, None, None)
     demo.queue()
     demo.launch(allowed_paths=["static/"], favicon_path="static/princess.ico")

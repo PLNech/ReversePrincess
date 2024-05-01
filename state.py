@@ -1,7 +1,7 @@
 class GameState:
     history: list = []
-    current_location = "Her room at the top of the dragon's tower"
-    current_objective = "Get out of her room"
+    current_location: str = "Her room at the top of the dragon's tower"
+    current_objective: str = "Get out of her room"
 
     def __init__(self, introduction: str):
         self.history.append(introduction)
