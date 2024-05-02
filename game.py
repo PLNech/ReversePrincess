@@ -7,6 +7,7 @@ import gradio as gr
 
 from narrator import GameNarrator
 from oracle import choose_model
+from prompts import INTRO
 from state import GameState
 
 PROMPT_INTRO = (
@@ -19,7 +20,7 @@ PROMPT_INTRO = (
 SYSTEM = "You are a story generator."
 BUTTON_BEGIN = "Once upon a time, the princess was locked in"
 
-DEBUG_LOCAL_INIT = False
+DEBUG_LOCAL_INIT = True
 SAVE = True
 
 
@@ -50,50 +51,56 @@ def save_generation(prompt: str, response: str, model: Optional[str] = None, ext
 
 def respond(button: str, chat_history, json_src):
     print(f"Choice: {button}")
-    yield button, button, button, chat_history, "", json_src
+    chat_history.append((button, None))  # Add immediately the player's chosen action
+    yield "", "", "", chat_history, "", json_src
 
-    action_result, _ = GameNarrator.describe_action_result(game_state, button)
-    chat_history.append((button, action_result))
-    yield button, button, button, chat_history, "", json_src
+    action_result, _, d10 = GameNarrator.describe_action_result(game_state, button)
+    chat_history.append((None, f"Result({d10}/10): {action_result}"))  # Display action result
+    yield "", "", "", chat_history, "", json_src
 
     current_situation, _ = GameNarrator.describe_current_situation(game_state)
-    chat_history.append((None, current_situation))
-    yield button, button, button, chat_history, "", json_src
+    chat_history.append((None, f"Current situation: {current_situation}"))  # Then display resulting position
+    yield "", "", "", chat_history, "", json_src
 
     location, _ = GameNarrator.current_location(game_state)
     objective, _ = GameNarrator.current_objective(game_state)
     game_state.update([action_result, current_situation], location, objective)
 
-    situation = GameNarrator.display_information(game_state)
-    options, response = GameNarrator.generate_options(situation)
+    new_situation = GameNarrator.display_information(game_state)
+    print(f"FINAL SITUATION: {new_situation}")
+    new_options, response = GameNarrator.generate_options(new_situation)
+    print(f"FINAL OPTIONS: {new_options}")
 
-    yield options[0], options[1], options[2], chat_history, situation, response
+    yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, response
 
 
 if __name__ == "__main__":
     print("Running game!")
-    game_state = GameState(GameNarrator.introduction)
+    game_state = GameState(INTRO)
 
     if DEBUG_LOCAL_INIT:
-        current_situation = GameNarrator.introduction
+        current_situation = INTRO
         options = ["Do a barrel roll", "Dance him to death", "What would Jesus do???"]
         json_str = json.dumps(options)
+        current_info = GameNarrator.display_information(game_state)
     else:
         current_situation, _ = GameNarrator.describe_current_situation(game_state)
         options, json_str = GameNarrator.generate_options(current_situation)
+        current_info = "INFO"
 
-    with gr.Blocks(title="Reverse Princess Simulator") as demo:
+    with gr.Blocks(title="Reverse Princess Simulator", css="footer{display:none !important}",
+                   theme=gr.themes.Soft()) as demo:
         with gr.Row() as row1:
             chatbot = gr.Chatbot(
                 label="Damsell in Prowess",
-                value=[[None, GameNarrator.introduction]],
+                value=[[None, INTRO]],
                 scale=3,
-                height=768,
+                height=768
             )
             with gr.Column(scale=1) as col:
                 situation = gr.TextArea(
                     label="Current situation",
-                    value=(GameNarrator.display_information(game_state)),
+                    value=current_info,
                     scale=1,
                 )
                 json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
