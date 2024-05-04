@@ -6,7 +6,7 @@ import ollama
 from prompts import PRE_PROMPT
 
 model_preferences = [  # Ordered by storytelling capability, prove me wrong
-    "phi3:mini",  # DEBUG MINI-MODEL
+    # "phi3:mini",  # DEBUG MINI-MODEL
     "dolphin-mistral:latest",
     "llama3:70b-text-q2_K",
     "llama3:latest",

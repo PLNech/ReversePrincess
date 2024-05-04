@@ -13,7 +13,7 @@ from state import GameState
 class GameNarrator:
 
     @staticmethod
-    def describe_current_situation(game_state: GameState, tries: int = 3) -> tuple[dict[str, str], str]:
+    def describe_current_situation(game_state: GameState, tries: int = 5) -> tuple[dict[str, str], str]:
         print("DESCRIBING SITUATION... ", end="")
         prompt = (
             f"{PRE_PROMPT} determine the current situation of the princess. "
@@ -41,7 +41,7 @@ class GameNarrator:
         )
 
     @staticmethod
-    def generate_options(situation: str = None, retries: int = 3) -> tuple[list[str], str]:
+    def generate_options(situation: str = None, retries: int = 5) -> tuple[list[str], str]:
         prompt = (
             f"{PRE_PROMPT} Generate three potential actions the princess could do now."
             f"The current situation for the princess is the following:\n"
