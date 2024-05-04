@@ -94,7 +94,11 @@ def respond(button: str, chat_history, json_src):
     print(f"FINAL OPTIONS: {new_options}")
     yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, None, response
 
-    yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, response
+    print("GENERATING NEW ILLUSTRATION")
+    gr.Info("Diffusing illustration from new situation...")
+    image: Image = text2image(new_situation)
+    # image.show()
+    yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, image, response
 
 
 if __name__ == "__main__":
@@ -106,10 +110,12 @@ if __name__ == "__main__":
         options = ["Do a barrel roll", "Dance him to death", "What would Jesus do???"]
         json_str = json.dumps(options)
         current_info = GameNarrator.display_information(game_state)
+        initial_image = None
     else:
         current_situation, _ = GameNarrator.describe_current_situation(game_state)
         options, json_str = GameNarrator.generate_options(current_situation["long_description"])
         current_info = "INFO"
+        initial_image = text2image("A powerful princess trapped in a castle")
 
     # Theme quickly generated using https://www.gradio.app/guides/theming-guide - try it and change some more!
     theme = gr.themes.Soft(
@@ -122,31 +128,33 @@ if __name__ == "__main__":
     )
     with gr.Blocks(title="Reverse Princess Simulator", css="footer{display:none !important}", theme=theme
                    ) as demo:
-        with gr.Row(elem_classes=["box_chat"]) as row1:
-            chatbot = gr.Chatbot(
-                label="Damsell in Prowess",
-                elem_classes=["box_chatbot"],
-                value=[[None, INTRO]],
-                scale=3,
-                height=768
-            )
+        with gr.Row(elem_classes=["box_main"]) as row1:
+            with gr.Column(scale=3, elem_classes=["box_chat"]):
+                chatbot = gr.Chatbot(
+                    label="Damsell in Prowess",
+                    elem_classes=["box_chatbot"],
+                    value=[[None, INTRO]],
+                    scale=3,
+                    height=512
+                )
+                with gr.Row(elem_classes=["box_buttons"]) as row2:
+                    print("Loading initial choice... ", end="")
+                    print(f"Buttons: {options}")
+
+                    action1 = gr.Button(f"{options[0]}")
+                    action2 = gr.Button(f"{options[1]}")
+                    action3 = gr.Button(f"{options[2]}")
+
             with gr.Column(scale=1, elem_classes=["box_info"]) as col:
                 situation = gr.TextArea(
                     label="Current situation",
                     value=current_info,
                     scale=1,
                 )
+                illustration = gr.Image(value=initial_image, label=None)
                 json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
 
-        with gr.Row(elem_classes=["box_buttons"]) as row2:
-            print("Loading initial choice... ", end="")
-            print(f"Buttons: {options}")
-
-            action1 = gr.Button(f"{options[0]}")
-            action2 = gr.Button(f"{options[1]}")
-            action3 = gr.Button(f"{options[2]}")
-
-        outputs = [action1, action2, action3, chatbot, situation, json_view]
+        outputs = [action1, action2, action3, chatbot, situation, illustration, json_view]
 
         action1.click(respond, [action1, chatbot, json_view], outputs)
         action2.click(respond, [action2, chatbot, json_view], outputs)
