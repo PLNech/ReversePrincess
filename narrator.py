@@ -85,8 +85,7 @@ class GameNarrator:
 
         prompt = (
             f"{PRE_PROMPT} Determine what happens after this action."
-            f"The history so far:\n"
-            f"{game_state.history_so_far()}"
+            f"The story so far:\n{game_state.history_so_far()}"
             f"The princess chose to do: '{action}'\n"
             f"The result determined by a d10 dice roll was {result_score}/10: '{result}'\n"
             f"Describe what happens to her next in a maximum of three short sentences."
@@ -101,12 +100,9 @@ class GameNarrator:
         print("LOCATING... ", end="")
         prompt = (
             f"{PRE_PROMPT} determine the current location of the princess. "
-            f"Given the following story:\n"
-            f"{game_state.history_so_far()}"
-            f"Where is the princess? Reply in a few words. Examples:\n"
-            f"- In the wine cellar\n"
-            f"- On the roof under strong winds\n"
-            f"- In the kitchen\n"
+            f"Given the following story:\n{game_state.history_so_far()}"
+            f"Where is the princess? Reply in a few words. Examples: \"In the wine cellar\", "
+            f"or \"On the roof under strong winds\", or \"In the kitchen\"."
         )
         gr.Info(f"Locating princess...")
         prediction, source = Oracle.predict(prompt)
@@ -118,12 +114,9 @@ class GameNarrator:
         print("OBJECTIVE... ", end="")
         prompt = (
             f"{PRE_PROMPT} Determine the current goal of the princess."
-            f"Given the following story :\n"
-            f"{game_state.history_so_far()}"
-            f"What is the short-term goal of the princess? Reply in a few words. Examples:\n"
-            "- Getting out of the room.\n"
-            "- Opening the treasure chest.\n"
-            "- Solving the enigma.\n"
+            f"Given the following story :\n{game_state.history_so_far()}"
+            f"What is the short-term goal of the princess? Reply in a few words. Examples: \"Getting out of the room\","
+            f" or \"Opening the treasure chest\", or \"Solving the enigma\".\n"
         )
         gr.Info(f"Clarifying goal...")
         prediction, source = Oracle.predict(prompt)
