@@ -95,7 +95,7 @@ class GameNarrator:
     def current_location(game_state: GameState) -> tuple[str, str]:
         print("LOCATING... ", end="")
         prompt = (
-            f"{GameNarrator._PRE_PROMPT} determine the current location of the princess. "
+            f"{PRE_PROMPT} determine the current location of the princess. "
             f"Given the following story:\n"
             f"{game_state.history_so_far()}"
             f"Where is the princess? Reply in a few words. Examples:\n"

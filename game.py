@@ -20,7 +20,7 @@ PROMPT_INTRO = (
 SYSTEM = "You are a story generator."
 BUTTON_BEGIN = "Once upon a time, the princess was locked in"
 
-DEBUG_LOCAL_INIT = True
+DEBUG_LOCAL_INIT = False
 SAVE = True
 
 
@@ -88,16 +88,26 @@ if __name__ == "__main__":
         options, json_str = GameNarrator.generate_options(current_situation)
         current_info = "INFO"
 
-    with gr.Blocks(title="Reverse Princess Simulator", css="footer{display:none !important}",
-                   theme=gr.themes.Soft()) as demo:
-        with gr.Row() as row1:
+    # Theme quickly generated using https://www.gradio.app/guides/theming-guide - try it and change some more!
+    theme = gr.themes.Soft(
+        text_size="lg",
+        spacing_size="lg",
+        radius_size="lg",
+    ).set(
+        body_background_fill='*block_background_fill',
+        body_text_size='*text_lg'
+    )
+    with gr.Blocks(title="Reverse Princess Simulator", css="footer{display:none !important}", theme=theme
+                   ) as demo:
+        with gr.Row(elem_classes=["box_chat"]) as row1:
             chatbot = gr.Chatbot(
                 label="Damsell in Prowess",
+                elem_classes=["box_chatbot"],
                 value=[[None, INTRO]],
                 scale=3,
                 height=768
             )
-            with gr.Column(scale=1) as col:
+            with gr.Column(scale=1, elem_classes=["box_info"]) as col:
                 situation = gr.TextArea(
                     label="Current situation",
                     value=current_info,
@@ -105,7 +115,7 @@ if __name__ == "__main__":
                 )
                 json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
 
-        with gr.Row() as row2:
+        with gr.Row(elem_classes=["box_buttons"]) as row2:
             print("Loading initial choice... ", end="")
             print(f"Buttons: {options}")
 
