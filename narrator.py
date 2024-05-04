@@ -13,7 +13,7 @@ from state import GameState
 class GameNarrator:
 
     @staticmethod
-    def describe_current_situation(game_state: GameState) -> tuple[str, str]:
+    def describe_current_situation(game_state: GameState, tries: int = 3) -> tuple[dict[str, str], str]:
         print("DESCRIBING SITUATION... ", end="")
         prompt = (
             f"{PRE_PROMPT} determine the current situation of the princess. "
@@ -21,12 +21,17 @@ class GameNarrator:
             f"{game_state.history_so_far()}\n"
             f"The princess is currently at this location: {game_state.current_location}\n"
             f"The princess has the following goal: {game_state.current_objective}\n"
-            f"Make a quick description under 20 words of her current situation. "
-            f"Check your work to make it short enough."
+            f"Return a JSON object describing her current situation. "
+            f"You must include a 'short_description' under 20 words and a 'long_description' under 100 words."
         )
-        prediction, source = Oracle.predict(prompt)
-        print(prediction)
-        return prediction, source
+        for i in range(tries):
+            try:
+                prediction, source = Oracle.predict(prompt, is_json=True)
+                descriptions = json.loads(prediction)
+                return descriptions, source
+            except JSONDecodeError:
+                continue
+        raise RuntimeError(f"Failed to describe after {tries} tries...")
 
     @staticmethod
     def display_information(game_state: GameState) -> str:

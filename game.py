@@ -4,11 +4,13 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 import gradio as gr
+from PIL.Image import Image
 
 from narrator import GameNarrator
 from oracle import choose_model
 from prompts import INTRO
 from state import GameState
+from visuals.diffuse import text2image
 
 PROMPT_INTRO = (
     "The year is 1900 and the whole western world is delighted by the Paris _Exposition Universelle_. "
@@ -50,26 +52,47 @@ def save_generation(prompt: str, response: str, model: Optional[str] = None, ext
 
 
 def respond(button: str, chat_history, json_src):
+    """
+    Respond to the user's choice, advancing the story.
+
+    The response flows along these steps:
+    - User Choice
+    - Action result/D10 = describe(choice)
+    - Update state with long description
+    - Location = curLocation(state)
+    - Objective = curLocation(state)
+    - Update state with location+objective
+    - New situation = display(location+objective)
+    - New options = generate3(new situation)
+
+    :param button:
+    :param chat_history:
+    :param json_src:
+    :return:
+    """
     print(f"Choice: {button}")
     chat_history.append((button, None))  # Add immediately the player's chosen action
-    yield "", "", "", chat_history, "", json_src
+    yield "", "", "", chat_history, "", None, json_src
 
     action_result, _, d10 = GameNarrator.describe_action_result(game_state, button)
-    chat_history.append((None, f"Result({d10}/10): {action_result}"))  # Display action result
-    yield "", "", "", chat_history, "", json_src
+    chat_history.append((None, f"## Action Result: D10->{d10}\n###{action_result}"))  # Display action result
+    yield "", "", "", chat_history, "", None, json_src
 
-    current_situation, _ = GameNarrator.describe_current_situation(game_state)
-    chat_history.append((None, f"Current situation: {current_situation}"))  # Then display resulting position
-    yield "", "", "", chat_history, "", json_src
+    descriptions, _ = GameNarrator.describe_current_situation(game_state)
+    game_state.update([action_result, descriptions["long_description"]])
+    # Then display resulting position
+    chat_history.append((None, f"## {descriptions['short_description']}\n{descriptions['long_description']}"))
+    yield "", "", "", chat_history, "", None, json_src
 
     location, _ = GameNarrator.current_location(game_state)
     objective, _ = GameNarrator.current_objective(game_state)
-    game_state.update([action_result, current_situation], location, objective)
+    game_state.update(None, location, objective)
 
     new_situation = GameNarrator.display_information(game_state)
     print(f"FINAL SITUATION: {new_situation}")
     new_options, response = GameNarrator.generate_options(new_situation)
     print(f"FINAL OPTIONS: {new_options}")
+    yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, None, response
 
     yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, response
 
@@ -85,7 +108,7 @@ if __name__ == "__main__":
         current_info = GameNarrator.display_information(game_state)
     else:
         current_situation, _ = GameNarrator.describe_current_situation(game_state)
-        options, json_str = GameNarrator.generate_options(current_situation)
+        options, json_str = GameNarrator.generate_options(current_situation["long_description"])
         current_info = "INFO"
 
     # Theme quickly generated using https://www.gradio.app/guides/theming-guide - try it and change some more!
