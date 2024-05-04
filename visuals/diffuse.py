@@ -1,4 +1,7 @@
+import datetime
+import os.path
 from functools import lru_cache
+from os import mkdir
 
 import torch
 from PIL import Image
@@ -179,9 +182,16 @@ def load_lora_pipe():
     return pipe
 
 
-def text2image(story: str) -> Image:
+def text2image(story: str, save: bool = True) -> Image:
     """Use our current best text2image model, with wrapping of story."""
-    return text2image_v2(story)
+    image: Image = text2image_v2(story)
+    if save:
+        key = f"{story[:20]}".strip().replace(" ", "_")
+        time = int(datetime.datetime.now().timestamp())
+        if not os.path.exists("./generated/images/"):
+           os.mkdir("./generated/images/")
+        image.save(f"./generated/images/{key}_{time}.png")
+    return image
 
 
 def main_diffusion():
