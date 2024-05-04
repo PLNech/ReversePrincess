@@ -75,7 +75,7 @@ def respond(button: str, chat_history, json_src):
     yield "", "", "", chat_history, "", None, json_src
 
     action_result, _, d10 = GameNarrator.describe_action_result(game_state, button)
-    chat_history.append((None, f"## Action Result: D10->{d10}\n###{action_result}"))  # Display action result
+    chat_history.append((None, f"## Action Result: D10->{d10}\n### {action_result}"))  # Display action result
     yield "", "", "", chat_history, "", None, json_src
 
     descriptions, _ = GameNarrator.describe_current_situation(game_state)
