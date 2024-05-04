@@ -51,7 +51,7 @@ def save_generation(prompt: str, response: str, model: Optional[str] = None, ext
         json.dump(data.__dict__, file)
 
 
-def respond(button: str, chat_history, json_src):
+def respond(button: str, chat_history, current_image, json_src):
     """
     Respond to the user's choice, advancing the story.
 
@@ -65,24 +65,27 @@ def respond(button: str, chat_history, json_src):
     - New situation = display(location+objective)
     - New options = generate3(new situation)
 
-    :param button:
-    :param chat_history:
-    :param json_src:
+    :param button: user choice
+    :param chat_history: stateful history so far
+    :param current_image: maintain image during generation
+    :param json_src: maintain displayed JSON until generation updates it
     :return:
     """
     print(f"Choice: {button}")
     chat_history.append((button, None))  # Add immediately the player's chosen action
-    yield "", "", "", chat_history, "", None, json_src
+    yield "", "", "", chat_history, "", current_image, json_src
 
-    action_result, _, d10 = GameNarrator.describe_action_result(game_state, button)
-    chat_history.append((None, f"## Action Result: D10->{d10}\n### {action_result}"))  # Display action result
-    yield "", "", "", chat_history, "", None, json_src
+    action_results, json_output, d10 = GameNarrator.describe_action_result(game_state, button)
+    chat_history.append((None, f"## Action Result: D10->{d10}\n###  {action_results['short_description']}  \n"
+                               f"{action_results['long_description']}"
+                         ))  # Display action result
+    yield "", "", "", chat_history, "", current_image, json_output
 
-    descriptions, _ = GameNarrator.describe_current_situation(game_state)
-    game_state.update([action_result, descriptions["long_description"]])
+    descriptions, json_output = GameNarrator.describe_current_situation(game_state)
+    game_state.update([action_results["long_description"], descriptions["long_description"]])
     # Then display resulting position
     chat_history.append((None, f"## {descriptions['short_description']}\n{descriptions['long_description']}"))
-    yield "", "", "", chat_history, "", None, json_src
+    yield "", "", "", chat_history, "", current_image, json_output
 
     location, _ = GameNarrator.current_location(game_state)
     objective, _ = GameNarrator.current_objective(game_state)
@@ -135,7 +138,7 @@ if __name__ == "__main__":
                     elem_classes=["box_chatbot"],
                     value=[[None, INTRO]],
                     scale=3,
-                    height=512
+                    height="50%"
                 )
                 with gr.Row(elem_classes=["box_buttons"]) as row2:
                     print("Loading initial choice... ", end="")
@@ -151,14 +154,14 @@ if __name__ == "__main__":
                     value=current_info,
                     scale=1,
                 )
-                illustration = gr.Image(value=initial_image, label=None)
+                illustration = gr.Image(value=initial_image, interactive=False, label=None)
                 json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
 
         outputs = [action1, action2, action3, chatbot, situation, illustration, json_view]
 
-        action1.click(respond, [action1, chatbot, json_view], outputs)
-        action2.click(respond, [action2, chatbot, json_view], outputs)
-        action3.click(respond, [action3, chatbot, json_view], outputs)
+        action1.click(respond, [action1, chatbot, illustration, json_view], outputs)
+        action2.click(respond, [action2, chatbot, illustration, json_view], outputs)
+        action3.click(respond, [action3, chatbot, illustration, json_view], outputs)
 
     demo.queue()
     demo.launch(allowed_paths=["static/"], favicon_path="static/princess.ico")

@@ -13,7 +13,7 @@ from state import GameState
 class GameNarrator:
 
     @staticmethod
-    def describe_current_situation(game_state: GameState, tries: int = 5) -> tuple[dict[str, str], str]:
+    def describe_current_situation(game_state: GameState, retries: int = 5) -> tuple[dict[str, str], str]:
         print("DESCRIBING SITUATION... ", end="")
         prompt = (
             f"{PRE_PROMPT} determine the current situation of the princess. "
@@ -24,14 +24,14 @@ class GameNarrator:
             f"Return a JSON object describing her current situation. "
             f"You must include a 'short_description' under 20 words and a 'long_description' under 100 words."
         )
-        for i in range(tries):
+        for i in range(retries):
             try:
                 prediction, source = Oracle.predict(prompt, is_json=True)
                 descriptions = json.loads(prediction)
                 return descriptions, source
             except JSONDecodeError:
                 continue
-        raise RuntimeError(f"Failed to describe after {tries} tries...")
+        raise RuntimeError(f"Failed to describe after {retries} tries...")
 
     @staticmethod
     def display_information(game_state: GameState) -> str:
@@ -67,7 +67,7 @@ class GameNarrator:
         raise SystemError(f"Failed to generate options after {retries} retries...")
 
     @staticmethod
-    def describe_action_result(game_state: GameState, action: str) -> tuple[str, str, int]:
+    def describe_action_result(game_state: GameState, action: str, retries: int = 5) -> tuple[dict[str, str], str, int]:
         print("DESCRIBING ACTION... ", end="")
         result_score = random.randint(0, 10)
         if result_score > 9:
@@ -89,11 +89,19 @@ class GameNarrator:
             f"The princess chose to do: '{action}'\n"
             f"The result determined by a d10 dice roll was {result_score}/10: '{result}'\n"
             f"Describe what happens to her next in a maximum of three short sentences."
+            f"Return a JSON object describing her current situation. "
+            f"You must include a 'short_description' under 20 words and a 'long_description' under 100 words."
         )
         gr.Info(f"Describing action result: \"{action} -> {result}\"")
-        prediction, source = Oracle.predict(prompt)
-        print(prediction)
-        return prediction, source, result_score
+        for i in range(retries):
+            try:
+                prediction, source = Oracle.predict(prompt, is_json=True)
+                descriptions = json.loads(prediction)
+                print(descriptions)
+                return descriptions, source, result_score
+            except JSONDecodeError:
+                continue
+        raise RuntimeError(f"Failed to describe after {retries} tries...")
 
     @staticmethod
     def current_location(game_state: GameState) -> tuple[str, str]:
