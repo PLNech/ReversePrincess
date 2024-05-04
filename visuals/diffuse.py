@@ -1,7 +1,6 @@
 import datetime
 import os.path
 from functools import lru_cache
-from os import mkdir
 
 import torch
 from PIL import Image
@@ -9,17 +8,17 @@ from diffusers import AutoencoderKL, UNet2DConditionModel, DiffusionPipeline
 from transformers import CLIPTextModel, CLIPTokenizer
 
 
-def wrap_story(story: str) -> str:
+def wrap_story(story: str, style: str = "") -> str:
     # Warning: we put story at the end as truncation might occur
-    # (The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens)
+    # ( The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens)
     story = story.replace(',', ' ')
 
-    # return f"A timeless child book illustration of {story}, bright watercolor, aged book, cute illustration"
-    # return f"pixel art, dark background, {story}"
-    return f"moebius comic book futuristic drawing, no text, cropped focus, bold coloring, {story}"
+    focus = "no text, cropped focus"
+
+    return f"{style}, {focus}, {story}"
 
 
-def text2image_manual(story: str) -> Image:
+def text2image_manual(prompt: str) -> Image:
     vae = AutoencoderKL.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="vae", use_safetensors=True)
     tokenizer = CLIPTokenizer.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="tokenizer")
     text_encoder = CLIPTextModel.from_pretrained(
@@ -38,7 +37,6 @@ def text2image_manual(story: str) -> Image:
     text_encoder.to(torch_device)
     unet.to(torch_device)
 
-    prompt = [wrap_story(story)]
     height = 512  # default height of Stable Diffusion
     width = 512  # default width of Stable Diffusion
     num_inference_steps = 50  # Number of denoising steps
@@ -113,7 +111,7 @@ def text2image_manual(story: str) -> Image:
     return image
 
 
-def text2image_v2(story: str, num_inference_steps: int = 100, height=512, width=512) -> Image:
+def text2image_v2(prompt: str, num_inference_steps: int = 100, height=512, width=512) -> Image:
     import torch
     from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 
@@ -127,12 +125,12 @@ def text2image_v2(story: str, num_inference_steps: int = 100, height=512, width=
     pipe.scheduler = scheduler
     pipe = pipe.to("cuda")
 
-    image = pipe(wrap_story(story), height=height, width=width).images[0]
+    image = pipe(prompt, height=height, width=width).images[0]
 
     return image
 
 
-def text2image_hyper(story: str, num_inference_steps: int = 1) -> Image:
+def text2image_hyper(prompt: str, num_inference_steps: int = 1) -> Image:
     import torch
     from diffusers import DiffusionPipeline, TCDScheduler
     from huggingface_hub import hf_hub_download
@@ -147,12 +145,11 @@ def text2image_hyper(story: str, num_inference_steps: int = 1) -> Image:
     pipe.scheduler = TCDScheduler.from_config(pipe.scheduler.config)
     # Lower eta results in more detail for multi-steps inference
     eta = 1.0
-    prompt = wrap_story(story)
     image = pipe(prompt=prompt, num_inference_steps=num_inference_steps, guidance_scale=0, eta=eta).images[0]
     return image
 
 
-def text2image_peft(story: str, num_inference_steps: int = 100) -> Image:
+def text2image_peft(prompt: str, num_inference_steps: int = 100) -> Image:
     # See https://github.com/huggingface/diffusers/issues/5489
     import torch
 
@@ -161,7 +158,6 @@ def text2image_peft(story: str, num_inference_steps: int = 100) -> Image:
 
     # Perform inference.
     # Notice how the prompt is constructed.
-    prompt = wrap_story(story)
     image = pipe(
         prompt, num_inference_steps=num_inference_steps, cross_attention_kwargs={"scale": 1.0},
         generator=torch.manual_seed(0)
@@ -182,14 +178,15 @@ def load_lora_pipe():
     return pipe
 
 
-def text2image(story: str, save: bool = True) -> Image:
+def text2image(story: str, style: str = "", save: bool = True) -> Image:
     """Use our current best text2image model, with wrapping of story."""
-    image: Image = text2image_v2(story)
+    prompt = wrap_story(story, style)
+    image: Image = text2image_v2(prompt)
     if save:
-        key = f"{story[:20]}".strip().replace(" ", "_")
+        key = f"{story[:50]}".strip().replace(" ", "_")
         time = int(datetime.datetime.now().timestamp())
         if not os.path.exists("./generated/images/"):
-           os.mkdir("./generated/images/")
+            os.mkdir("./generated/images/")
         image.save(f"./generated/images/{key}_{time}.png")
     return image
 

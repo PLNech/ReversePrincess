@@ -8,7 +8,7 @@ from PIL.Image import Image
 
 from narrator import GameNarrator
 from oracle import choose_model
-from prompts import INTRO
+from prompts import INTRO, IMAGE_STYLE_NAMES, IMAGE_STYLES, IMAGE_STYLE_DEFAULT
 from state import GameState
 from visuals.diffuse import text2image
 
@@ -51,7 +51,7 @@ def save_generation(prompt: str, response: str, model: Optional[str] = None, ext
         json.dump(data.__dict__, file)
 
 
-def respond(button: str, chat_history, current_image, json_src):
+def respond(button: str, chat_history, style, current_image, json_src):
     """
     Respond to the user's choice, advancing the story.
 
@@ -67,6 +67,7 @@ def respond(button: str, chat_history, current_image, json_src):
 
     :param button: user choice
     :param chat_history: stateful history so far
+    :param style: selected illustration style
     :param current_image: maintain image during generation
     :param json_src: maintain displayed JSON until generation updates it
     :return:
@@ -76,7 +77,7 @@ def respond(button: str, chat_history, current_image, json_src):
     yield "", "", "", chat_history, "", current_image, json_src
 
     action_results, json_output, d10 = GameNarrator.describe_action_result(game_state, button)
-    chat_history.append((None, f"## Action Result: D10->{d10}\n###  {action_results['short_description']}  \n"
+    chat_history.append((None, f"## Action Result: rolled a {d10}/10\n###  {action_results['short_description']}  \n"
                                f"{action_results['long_description']}"
                          ))  # Display action result
     yield "", "", "", chat_history, "", current_image, json_output
@@ -99,7 +100,7 @@ def respond(button: str, chat_history, current_image, json_src):
 
     print("GENERATING NEW ILLUSTRATION")
     gr.Info("Diffusing illustration from new situation...")
-    image: Image = text2image(new_situation)
+    image: Image = text2image(new_situation, IMAGE_STYLES[style])
     # image.show()
     yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, image, response
 
@@ -154,14 +155,18 @@ if __name__ == "__main__":
                     value=current_info,
                     scale=1,
                 )
+
+                image_style = gr.Dropdown(label="Illustration style", interactive=True,
+                                          choices=IMAGE_STYLE_NAMES, value=IMAGE_STYLE_DEFAULT)
                 illustration = gr.Image(value=initial_image, interactive=False, label=None)
                 json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
 
         outputs = [action1, action2, action3, chatbot, situation, illustration, json_view]
+        inputs = [chatbot, image_style, illustration, json_view]
 
-        action1.click(respond, [action1, chatbot, illustration, json_view], outputs)
-        action2.click(respond, [action2, chatbot, illustration, json_view], outputs)
-        action3.click(respond, [action3, chatbot, illustration, json_view], outputs)
+        action1.click(respond, [action1, *inputs], outputs)
+        action2.click(respond, [action2, *inputs], outputs)
+        action3.click(respond, [action3, *inputs], outputs)
 
     demo.queue()
     demo.launch(allowed_paths=["static/"], favicon_path="static/princess.ico")

@@ -20,3 +20,12 @@ INTRO = (
     # f"This is it, she must rescue him from the patriarchy !\n"
     f"Locked in her room, she packed her belongings in a backpack and starts looking for a way out."
 )
+
+IMAGE_STYLES = {
+    "TIMELESS": "timeless child book illustration, bright watercolor, aged book, cute illustration",
+    "PIXELS": "pixel art, dark background",
+    "ENKI": "in the style of enki bilal, futuristic watercolor pencils",
+    "MOEBIUS": "moebius comic book futuristic drawing, bold coloring"
+}
+IMAGE_STYLE_NAMES: list[str] = [s for s in sorted(IMAGE_STYLES.keys())]
+IMAGE_STYLE_DEFAULT:str = "MOEBIUS"
