@@ -66,7 +66,7 @@ class Oracle:
         :return: a tuple: prediction, raw response.
         """
         prompt_view = prompt.removeprefix(PRE_PROMPT)
-        gr.Info(f"Answering prompt \"" + prompt_view[:80] + "[...]" + prompt_view [-20:] + "\"")
+        # gr.Info(f"Answering prompt \"" + prompt_view[:80] + "[...]" + prompt_view [-20:] + "\"")
         final_prompt = postprocess_prompt(prompt)
         response = ollama.chat(
             model=choose_model(),
@@ -78,6 +78,7 @@ class Oracle:
                     "content": final_prompt,
                 },
             ],
+            options={"temperature": 0.8}
         )
         response: str = response["message"]
         print(f"\n\n\n{final_prompt}\n -> {response}")

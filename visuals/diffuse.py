@@ -5,7 +5,10 @@ from functools import lru_cache
 import torch
 from PIL import Image
 from diffusers import AutoencoderKL, UNet2DConditionModel, DiffusionPipeline
+from numpy.random import randint
 from transformers import CLIPTextModel, CLIPTokenizer
+
+from prompts import IMAGE_STYLES
 
 
 def wrap_story(story: str, style: str = "") -> str:
@@ -13,7 +16,7 @@ def wrap_story(story: str, style: str = "") -> str:
     # ( The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens)
     story = story.replace(',', ' ')
 
-    focus = "no text, cropped focus"
+    focus = "no text, WS wide shot large perspective, wide-angle view"
 
     return f"{style}, {focus}, {story}"
 
@@ -112,6 +115,7 @@ def text2image_manual(prompt: str) -> Image:
 
 
 def text2image_v2(prompt: str, num_inference_steps: int = 100, height=512, width=512) -> Image:
+    print(f"Running T2I v2: {prompt}")
     import torch
     from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 
@@ -121,11 +125,14 @@ def text2image_v2(prompt: str, num_inference_steps: int = 100, height=512, width
     pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
     scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
     scheduler.set_timesteps(num_inference_steps)
+    generator = torch.Generator(device="cuda")
+    generator.manual_seed(randint(0, 64000))
 
     pipe.scheduler = scheduler
     pipe = pipe.to("cuda")
 
-    image = pipe(prompt, height=height, width=width).images[0]
+    image = pipe(prompt, guidance_scale=7.5, height=height, width=width,
+                 num_inference_steps=num_inference_steps, generator=generator).images[0]
 
     return image
 
@@ -166,6 +173,21 @@ def text2image_peft(prompt: str, num_inference_steps: int = 100) -> Image:
     return image
 
 
+def upscale(prompt: str, image: Image) -> Image:
+    from diffusers import StableDiffusionUpscalePipeline
+    import torch
+    print(f"Upscaling image with prompt {prompt}...")
+
+    # load model and scheduler
+    model_id = "stabilityai/stable-diffusion-x4-upscaler"
+    pipeline = StableDiffusionUpscalePipeline.from_pretrained(model_id, torch_dtype=torch.float16)
+    pipeline = pipeline.to("cuda")
+
+    upscaled_image = pipeline(prompt=prompt, image=image).images[0]
+    upscaled_image.save("upsampled_cat.png")
+    return upscaled_image
+
+
 @lru_cache(maxsize=1)
 def load_lora_pipe():
     pipe_id = "stabilityai/stable-diffusion-xl-base-1.0"
@@ -183,7 +205,7 @@ def text2image(story: str, style: str = "", save: bool = True) -> Image:
     prompt = wrap_story(story, style)
     image: Image = text2image_v2(prompt)
     if save:
-        key = f"{story[:50]}".strip().replace(" ", "_")
+        key = f"{story[:80]}".strip().replace(" ", "_")
         time = int(datetime.datetime.now().timestamp())
         if not os.path.exists("./generated/images/"):
             os.mkdir("./generated/images/")
@@ -192,11 +214,11 @@ def text2image(story: str, style: str = "", save: bool = True) -> Image:
 
 
 def main_diffusion():
-    story = "a princess killing the dragon with her ruby sword"
-    # mugshot: Image = text2image(story)
-    # mugshot: Image = text2image_v2(story)
-    mugshot: Image = text2image_v2(story)
+    story = "a man flying a parachute above yellow sunflower fields"
+    mugshot: Image = text2image(story, style=IMAGE_STYLES["MOEBIUS"], save=False)
     mugshot.show()
+    improved = upscale(story, mugshot)
+    improved.show()
     # mugshot.save("mugshot.png")
 
 

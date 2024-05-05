@@ -22,14 +22,15 @@ class GameNarrator:
             f"The princess is currently at this location: {game_state.current_location}\n"
             f"The princess has the following goal: {game_state.current_objective}\n"
             f"Return a JSON object describing her current situation. "
-            f"You must include a 'short_description' under 20 words and a 'long_description' under 100 words."
+            f"You must include at top-level a 'short_description' under 20 words and a 'long_description' under 100 words."
         )
         for i in range(retries):
             try:
                 prediction, source = Oracle.predict(prompt, is_json=True)
                 descriptions = json.loads(prediction)
+                assert "short_description" in descriptions and "long_description" in descriptions
                 return descriptions, source
-            except JSONDecodeError:
+            except (JSONDecodeError, AssertionError):
                 continue
         raise RuntimeError(f"Failed to describe after {retries} tries...")
 
@@ -69,7 +70,7 @@ class GameNarrator:
     @staticmethod
     def describe_action_result(game_state: GameState, action: str, retries: int = 5) -> tuple[dict[str, str], str, int]:
         print("DESCRIBING ACTION... ", end="")
-        result_score = random.randint(0, 10)
+        result_score = random.randint(1, 10)
         if result_score > 9:
             result = "This action works even better than expected !"
         elif result_score > 5:
@@ -89,33 +90,43 @@ class GameNarrator:
             f"The princess chose to do: '{action}'\n"
             f"The result determined by a d10 dice roll was {result_score}/10: '{result}'\n"
             f"Describe what happens to her next in a maximum of three short sentences."
-            f"Return a JSON object describing her current situation. "
-            f"You must include a 'short_description' under 20 words and a 'long_description' under 100 words."
+            f"Return a JSON object describing the results of her action."
+            f"You must include at top-level a 'short_description' under 20 words and a 'long_description' under 100 words."
         )
         gr.Info(f"Describing action result: \"{action} -> {result}\"")
         for i in range(retries):
             try:
                 prediction, source = Oracle.predict(prompt, is_json=True)
                 descriptions = json.loads(prediction)
+                assert "short_description" in descriptions and "long_description" in descriptions
                 print(descriptions)
                 return descriptions, source, result_score
-            except JSONDecodeError:
+            except (JSONDecodeError, AssertionError):
                 continue
         raise RuntimeError(f"Failed to describe after {retries} tries...")
 
     @staticmethod
-    def current_location(game_state: GameState) -> tuple[str, str]:
+    def current_location(game_state: GameState, retries: int = 5) -> tuple[dict[str, str], str]:
         print("LOCATING... ", end="")
+        gr.Info(f"Locating princess...")
         prompt = (
             f"{PRE_PROMPT} determine the current location of the princess. "
             f"Given the following story:\n{game_state.history_so_far()}"
             f"Where is the princess? Reply in a few words. Examples: \"In the wine cellar\", "
             f"or \"On the roof under strong winds\", or \"In the kitchen\"."
+            f"Return a JSON object describing her current location. "
+            f"You must include at top-level a 'short_description' under 20 words and a 'long_description' under 100 words."
+
         )
-        gr.Info(f"Locating princess...")
-        prediction, source = Oracle.predict(prompt)
-        print(prediction)
-        return prediction, source
+        for i in range(retries):
+            try:
+                prediction, source = Oracle.predict(prompt, is_json=True)
+                descriptions = json.loads(prediction)
+                assert "short_description" in descriptions and "long_description" in descriptions
+                return descriptions, source
+            except (JSONDecodeError, AssertionError):
+                continue
+        raise RuntimeError(f"Failed to describe after {retries} tries...")
 
     @staticmethod
     def current_objective(game_state: GameState) -> tuple[str, str]:

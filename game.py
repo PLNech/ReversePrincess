@@ -51,7 +51,7 @@ def save_generation(prompt: str, response: str, model: Optional[str] = None, ext
         json.dump(data.__dict__, file)
 
 
-def respond(button: str, chat_history, style, current_image, json_src):
+def respond(button: str, chat_history, style, prev_image, json_src):
     """
     Respond to the user's choice, advancing the story.
 
@@ -68,39 +68,43 @@ def respond(button: str, chat_history, style, current_image, json_src):
     :param button: user choice
     :param chat_history: stateful history so far
     :param style: selected illustration style
-    :param current_image: maintain image during generation
+    :param prev_image: maintain image during generation
     :param json_src: maintain displayed JSON until generation updates it
     :return:
     """
     print(f"Choice: {button}")
     chat_history.append((button, None))  # Add immediately the player's chosen action
-    yield "", "", "", chat_history, "", current_image, json_src
+    yield "", "", "", chat_history, "", prev_image, json_src
+    gr.Info(f"Generating action image: {button}...")
+    image: Image = text2image(f"The princess acts: {button}", IMAGE_STYLES[style])
+    yield "", "", "", chat_history, "", image, json_src
 
     action_results, json_output, d10 = GameNarrator.describe_action_result(game_state, button)
     chat_history.append((None, f"## Action Result: rolled a {d10}/10\n###  {action_results['short_description']}  \n"
                                f"{action_results['long_description']}"
                          ))  # Display action result
-    yield "", "", "", chat_history, "", current_image, json_output
+    yield "", "", "", chat_history, "", image, json_output
 
     descriptions, json_output = GameNarrator.describe_current_situation(game_state)
     game_state.update([action_results["long_description"], descriptions["long_description"]])
     # Then display resulting position
     chat_history.append((None, f"## {descriptions['short_description']}\n{descriptions['long_description']}"))
-    yield "", "", "", chat_history, "", current_image, json_output
+    yield "", "", "", chat_history, "", image, json_output
 
     location, _ = GameNarrator.current_location(game_state)
     objective, _ = GameNarrator.current_objective(game_state)
-    game_state.update(None, location, objective)
+    game_state.update(None, location["short_description"], objective)
 
     new_situation = GameNarrator.display_information(game_state)
     print(f"FINAL SITUATION: {new_situation}")
     new_options, response = GameNarrator.generate_options(new_situation)
     print(f"FINAL OPTIONS: {new_options}")
-    yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, None, response
+    yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, image, response
 
-    print("GENERATING NEW ILLUSTRATION")
+    print(f"GENERATING NEW ILLUSTRATION: {game_state.current_location}")
     gr.Info("Diffusing illustration from new situation...")
-    image: Image = text2image(new_situation, IMAGE_STYLES[style])
+    image: Image = text2image(f"The princess is now at the following location: {game_state.current_location}",
+                              IMAGE_STYLES[style])
     # image.show()
     yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, image, response
 
@@ -110,11 +114,10 @@ if __name__ == "__main__":
     game_state = GameState(INTRO)
 
     if DEBUG_LOCAL_INIT:
-        current_situation = INTRO
+        current_situation = {"long_description": INTRO}
         options = ["Do a barrel roll", "Dance him to death", "What would Jesus do???"]
         json_str = json.dumps(options)
         current_info = GameNarrator.display_information(game_state)
-        initial_image = None
     else:
         current_situation, _ = GameNarrator.describe_current_situation(game_state)
         options, json_str = GameNarrator.generate_options(current_situation["long_description"])
@@ -123,14 +126,15 @@ if __name__ == "__main__":
 
     # Theme quickly generated using https://www.gradio.app/guides/theming-guide - try it and change some more!
     theme = gr.themes.Soft(
-        text_size="lg",
+        text_size="md",
         spacing_size="lg",
         radius_size="lg",
     ).set(
         body_background_fill='*block_background_fill',
         body_text_size='*text_lg'
     )
-    with gr.Blocks(title="Reverse Princess Simulator", css="footer{display:none !important}", theme=theme
+    with gr.Blocks(title="Reverse Princess Simulator", css="footer{display:none !important}", theme=theme,
+                   analytics_enabled=False
                    ) as demo:
         with gr.Row(elem_classes=["box_main"]) as row1:
             with gr.Column(scale=3, elem_classes=["box_chat"]):
@@ -139,7 +143,7 @@ if __name__ == "__main__":
                     elem_classes=["box_chatbot"],
                     value=[[None, INTRO]],
                     scale=3,
-                    height="50%"
+                    height=512
                 )
                 with gr.Row(elem_classes=["box_buttons"]) as row2:
                     print("Loading initial choice... ", end="")
@@ -158,7 +162,7 @@ if __name__ == "__main__":
 
                 image_style = gr.Dropdown(label="Illustration style", interactive=True,
                                           choices=IMAGE_STYLE_NAMES, value=IMAGE_STYLE_DEFAULT)
-                illustration = gr.Image(value=initial_image, interactive=False, label=None)
+                illustration = gr.Image(show_label=False, value=initial_image, interactive=False, label=None)
                 json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
 
         outputs = [action1, action2, action3, chatbot, situation, illustration, json_view]

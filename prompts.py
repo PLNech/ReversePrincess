@@ -1,8 +1,9 @@
 PRE_PROMPT = (
-    f"You generate short story bits and write compelling adventure games made of few-sentence descriptions and actions."
+    f"You generate short story bits in simple english and write compelling adventure games made of few-sentence descriptions and actions."
     # f"you must write in the style of Brandon Sanderson. "
     f"You must always refer to the main character as the princess or she, "
     f"and always describe the scene in her third person subjective voice.\n"
+    "When possible you use simple words from the basic english vocabulary to keep the story readable for kids.\n"
     "You will generate a small part of the story, answering directly this request:\n"
 )
 
@@ -23,9 +24,9 @@ INTRO = (
 
 IMAGE_STYLES = {
     "TIMELESS": "timeless child book illustration, bright watercolor, aged book, cute illustration",
-    "PIXELS": "pixel art, dark background",
+    "PIXELS": "low-resolution pixel art, dark background lofi rendering",
     "ENKI": "in the style of enki bilal, futuristic watercolor pencils",
-    "MOEBIUS": "moebius comic book futuristic drawing, bold coloring"
+    "MOEBIUS": "moebius comic book futuristic pencil drawing, bold coloring, realistic drawing"
 }
 IMAGE_STYLE_NAMES: list[str] = [s for s in sorted(IMAGE_STYLES.keys())]
-IMAGE_STYLE_DEFAULT:str = "MOEBIUS"
+IMAGE_STYLE_DEFAULT: str = "PIXELS"
