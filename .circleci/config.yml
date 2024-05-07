@@ -14,7 +14,7 @@ jobs:
           pkg-manager: pip
       - run:
           name: Run tests
-          command: pytest tests/
+          command: PYTHONPATH=`pwd` pytest tests/
 
 workflows:
   testsuite: 
