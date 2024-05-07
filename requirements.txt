@@ -7,3 +7,6 @@ peft==0.10.0
 scipy==1.13.0
 safetensors==0.4.3
 xformers==0.0.26.post1
+
+dspy~=0.1.4
+textstat~=0.7.3
