@@ -4,5 +4,5 @@ diffusers==0.27.2
 peft==0.10.0
 scipy==1.13.0
 safetensors==0.4.3
-# Acceleration - uncomment locally only, CircleCI fails to install torch ;)
+# Acceleration - use locally only, CircleCI fails to install torch ;)
 xformers==0.0.26.post1
