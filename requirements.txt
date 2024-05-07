@@ -1,22 +1,9 @@
-# Text generation
-ollama==0.1.8
-dspy~=0.1.4
+-r ./requirements/common.txt
+-r ./requirements/prod.txt
 
-# Image generation
-accelerate==0.30.0
-diffusers==0.27.2
-peft==0.10.0
-scipy==1.13.0
-safetensors==0.4.3
-## Acceleration - uncomment locally only, CircleCI fails to install torch ;)
-# xformers==0.0.26.post1
-
-# UI
-gradio==4.26.0
-
-# Tests and metrics
-textstat~=0.7.3
-pytest==8.2.0
 
 # Dev tooling
 black
+# Tests and metrics
+pytest==8.2.0
+textstat~=0.7.3

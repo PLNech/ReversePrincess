@@ -12,11 +12,12 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: pip
+          pip-dependency-file: .circleci/requirements.txt
       - run:
           name: Run tests
           command: PYTHONPATH=`pwd` pytest tests/
 
 workflows:
-  testsuite: 
+  testsuite:
     jobs:
       - build-and-test
