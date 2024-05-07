@@ -19,4 +19,3 @@ class TestIntro(TestCase):
         self.assertIn("outer space", history)
         self.assertNotIn("Moon", history)
         self.assertNotIn("Low-Earth Orbit", history)
-        print(history)

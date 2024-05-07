@@ -126,7 +126,7 @@ def text2image_v2(prompt: str, num_inference_steps: int = 100, height=512, width
     scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
     scheduler.set_timesteps(num_inference_steps)
     generator = torch.Generator(device="cuda")
-    generator.manual_seed(randint(0, 64000))
+    generator.manual_seed(randint(0, 64000))  # Diverse results at each run
 
     pipe.scheduler = scheduler
     pipe = pipe.to("cuda")

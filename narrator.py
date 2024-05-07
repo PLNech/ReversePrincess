@@ -50,8 +50,9 @@ class GameNarrator:
             f"What could she try? Generate three options and reply in valid JSON "
             f"with your three options under the key 'options', as an array of strings. "
             f"Every option should be a short, complete subject-verb-object phrase with an action verb, under 15 words. "
+            "At least one option should be daring, or even perilous. ",
             f"For example :\n"
-            '{"options": ["She tries to open the cell door.", '
+            '{"options": ["She jumps from her hiding place and tries to open the cell door.", '
             '"She looks around for a solution to the puzzle.", '
             '"She waits for an opportunity to reason him."]}'
         )

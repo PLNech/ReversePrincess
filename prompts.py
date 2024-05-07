@@ -29,4 +29,4 @@ IMAGE_STYLES = {
     "MOEBIUS": "moebius comic book futuristic pencil drawing, bold coloring, realistic drawing"
 }
 IMAGE_STYLE_NAMES: list[str] = [s for s in sorted(IMAGE_STYLES.keys())]
-IMAGE_STYLE_DEFAULT: str = "PIXELS"
+IMAGE_STYLE_DEFAULT: str = "MOEBIUS"
