@@ -1,0 +1,12 @@
+# Text generation
+ollama==0.1.8
+dspy~=0.1.4
+
+# UI
+gradio==4.26.0
+
+# Dev improvements
+black # Formatting
+# Tests and metrics
+pytest==8.2.0
+textstat~=0.7.3
