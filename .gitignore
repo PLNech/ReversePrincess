@@ -161,3 +161,4 @@ cython_debug/
 
 # Generated outputs
 generated/*.json
+generated/*.png
