@@ -63,7 +63,7 @@ dev = [dspy.Example(story=story, location=location, objective=objective, task=ta
 
 def my_copro():
     lm = dspy.OllamaLocal(model='dolphin-mistral:latest')
-    dspy.settings.configure(lm=lm)
+    dspy.settings.configure(lm=lm, bypass_suggest=True)
 
     class NarratorSignature(dspy.Signature):
         """
@@ -91,6 +91,16 @@ def my_copro():
 
         def forward(self, story, location, objective, task):
             result = self.predictor(story=story, location=location, objective=objective, task=task)
+
+            whitelist = ["short_description", "long_description"]
+            bad_words = textstat.difficult_words_list(result.answer, 3)
+            bad_words = [w for w in bad_words if w not in whitelist]
+
+            dspy.Suggest(
+                len(bad_words) <= 5,
+                msg=f"Answer should have less complicated words, such as {','.join(bad_words)}",
+            )
+
             return dspy.Prediction(
                 answer=result.answer,
                 reasoning=result.rationale,
@@ -106,9 +116,21 @@ def my_copro():
         """
         return textstat.flesch_reading_ease(pred.answer.lower()) / 100
 
+    def validate_short(example: dspy.Example, pred: dspy.Prediction, trace=None) -> float:
+        """ True if the text is quick to read.
+
+        Returns:
+            An inverted reading time in seconds:
+            0s = 100
+            1s = 90s
+            10s = 0
+            20s = -100
+        """
+        return (100 - (10 * textstat.reading_time(pred.answer.lower()))) / 100
+
     NUM_THREADS = 5
     print("Evaluating raw COT model..")
-    evaluate = Evaluate(devset=dev, metric=validate_readable, num_threads=NUM_THREADS,
+    evaluate = Evaluate(devset=dev, metric=validate_short, num_threads=NUM_THREADS,
                         display_progress=True, display_table=False)
     cot_baseline = CoTPipeline()
 
@@ -121,6 +143,7 @@ def my_copro():
 
     optimizer = COPRO(
         metric=validate_readable,
+        depth=5,
         verbose=True,
     )
 
@@ -133,12 +156,13 @@ def my_copro():
     print("Saved compiled model as compiled_cot.json! Evaluating...")
     evaluate(compiled_prompt_opt, devset=devset_with_input)
 
+    input("Do you want to continue?")
     loaded_program = CoTPipeline()
     loaded_program.load(path="compiled_cot.json")
 
-    raw = dev_raw[0]
-    love = compiled_prompt_opt.forward(story=raw[0], location=raw[1], objective=raw[1], task=raw[3])
-    print(love)
+    # raw = dev_raw[0]
+    # love = compiled_prompt_opt.forward(story=raw[0], location=raw[1], objective=raw[1], task=raw[3])
+    # print(love)
     #
     # # Once the training is done you'll have better instructions and prefixes that you'll need to edit in signature
     # # manually. So let's say the output during optimization is like:
