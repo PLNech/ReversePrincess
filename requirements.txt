@@ -1,9 +1,2 @@
 -r ./requirements/common.txt
 -r ./requirements/prod.txt
-
-
-# Dev tooling
-black
-# Tests and metrics
-pytest==8.2.0
-textstat~=0.7.3
