@@ -2,6 +2,8 @@ import dspy
 from dspy.evaluate import answer_exact_match, Evaluate
 from dspy.teleprompt import BootstrapFewShot
 
+from model.names import ModelName
+
 
 class BasicOracle(dspy.Signature):
     """Generate content from a simple prompt."""
@@ -32,7 +34,7 @@ INTRO_OPTIONS = "The year is 1900 and the whole western world is delighted by th
 def main_dspy():
     print("Hello DSPY :)")
     # With local Ollama
-    lm = dspy.OllamaLocal(model='dolphin-mistral:latest')
+    lm = dspy.OllamaLocal(model=ModelName.dolphin)
 
     # Configure with their Retrieval Model based on wiki abstracts
     colbertv2_wiki17_abstracts = dspy.ColBERTv2(url='http://20.102.90.50:2017/wiki17_abstracts')

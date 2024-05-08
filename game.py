@@ -101,7 +101,7 @@ def respond(button: str, chat_history, json_src):
 
 def update_image(chat_history, style):
     last_action_text = ",".join([x for x in chat_history[-1] if x is not None])
-    gr.Info(f"Generating action image in style {style}: {last_action_text[:50]}...")
+    gr.Info(f"Generating action image in style {style}: {last_action_text[:20]}...")
     image: Image = text2image(f"{last_action_text}", IMAGE_STYLES[style])
     return image
 

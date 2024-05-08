@@ -3,11 +3,14 @@ from typing import Any, Union
 
 import ollama
 
+from model.names import ModelName
+
 model_preferences = [  # Ordered by storytelling capability, prove me wrong
     # "phi3:mini",  # DEBUG MINI-MODEL
-    "dolphin-mistral:latest",
+    ModelName.dolphin,
     "llama3:70b-text-q2_K",
-    "llama3:latest",
+    ModelName.llama3,
+    ModelName.llama3_8,
     "dolphin-mistral:7b-v2-q3_K_S",
     "gemma:latest",
     "gemma:7b",
