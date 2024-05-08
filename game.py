@@ -51,7 +51,7 @@ def save_generation(prompt: str, response: str, model: Optional[str] = None, ext
         json.dump(data.__dict__, file)
 
 
-def respond(button: str, chat_history, style, prev_image, json_src):
+def respond(button: str, chat_history, json_src):
     """
     Respond to the user's choice, advancing the story.
 
@@ -74,24 +74,19 @@ def respond(button: str, chat_history, style, prev_image, json_src):
     """
     print(f"Choice: {button}")
     chat_history.append((button, None))  # Add immediately the player's chosen action
-    yield "", "", "", chat_history, "", prev_image, json_src
-    gr.Info(f"Generating action image: {button}...")
-    # TODO: Could we generate image on interval in background?
-    #  E.G. Using https://www.gradio.app/guides/running-background-tasks
-    image: Image = text2image(f"The princess acts: {button}", IMAGE_STYLES[style])
-    yield "", "", "", chat_history, "", image, json_src
+    yield "", "", "", chat_history, "", json_src
 
     action_results, json_output, d10 = GameNarrator.describe_action_result(game_state, button)
     chat_history.append((None, f"## Action Result: rolled a {d10}/10\n###  {action_results['short_description']}  \n"
                                f"{action_results['long_description']}"
                          ))  # Display action result
-    yield "", "", "", chat_history, "", image, json_output
+    yield "", "", "", chat_history, "", json_output
 
     descriptions, json_output = GameNarrator.describe_current_situation(game_state)
     game_state.update([action_results["long_description"], descriptions["long_description"]])
     # Then display resulting position
     chat_history.append((None, f"## {descriptions['short_description']}\n{descriptions['long_description']}"))
-    yield "", "", "", chat_history, "", image, json_output
+    yield "", "", "", chat_history, "", json_output
 
     location, _ = GameNarrator.current_location(game_state)
     objective, _ = GameNarrator.current_objective(game_state)
@@ -101,15 +96,14 @@ def respond(button: str, chat_history, style, prev_image, json_src):
     print(f"FINAL SITUATION: {new_situation}")
     new_options, response = GameNarrator.generate_options(new_situation)
     print(f"FINAL OPTIONS: {new_options}")
-    yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, image, response
+    yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, response
 
-    print(f"GENERATING NEW ILLUSTRATION: {game_state.current_location}")
-    gr.Info("Diffusing illustration from new situation...")
-    image: Image = text2image(f"The princess is now at the following location: {game_state.current_location}",
-                              IMAGE_STYLES[style])
-    # image.show()
-    yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, image, response
 
+def update_image(chat_history, style):
+    last_action_text = ",".join([x for x in chat_history[-1] if x is not None])
+    gr.Info(f"Generating action image in style {style}: {last_action_text[:50]}...")
+    image: Image = text2image(f"{last_action_text}", IMAGE_STYLES[style])
+    return image
 
 if __name__ == "__main__":
     print("Running game!")
@@ -147,6 +141,7 @@ if __name__ == "__main__":
                     scale=3,
                     height=512
                 )
+
                 with gr.Row(elem_classes=["box_buttons"]) as row2:
                     print("Loading initial choice... ", end="")
                     print(f"Buttons: {options}")
@@ -164,15 +159,17 @@ if __name__ == "__main__":
 
                 image_style = gr.Dropdown(label="Illustration style", interactive=True,
                                           choices=IMAGE_STYLE_NAMES, value=IMAGE_STYLE_DEFAULT)
-                illustration = gr.Image(show_label=False, value=initial_image, interactive=False, streaming=False)
+                illustration = gr.Image(show_label=False, value=initial_image, interactive=False)
                 json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
 
-        outputs = [action1, action2, action3, chatbot, situation, illustration, json_view]
-        inputs = [chatbot, image_style, illustration, json_view]
+        outputs = [action1, action2, action3, chatbot, situation, json_view]
+        inputs = [chatbot, json_view]
 
         action1.click(respond, [action1, *inputs], outputs)
         action2.click(respond, [action2, *inputs], outputs)
         action3.click(respond, [action3, *inputs], outputs)
+
+        chatbot.change(update_image, [chatbot, image_style], illustration)
 
     demo.queue()
     demo.launch(allowed_paths=["static/"], favicon_path="static/princess.ico")
