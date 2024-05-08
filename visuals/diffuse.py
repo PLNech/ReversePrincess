@@ -5,6 +5,7 @@ from functools import lru_cache
 import torch
 from PIL import Image
 from diffusers import AutoencoderKL, UNet2DConditionModel, DiffusionPipeline
+from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 from numpy.random import randint
 from transformers import CLIPTextModel, CLIPTokenizer
 
@@ -114,27 +115,28 @@ def text2image_manual(prompt: str) -> Image:
     return image
 
 
-def text2image_v2(prompt: str, num_inference_steps: int = 100, height=512, width=512) -> Image:
+def text2image_v2(prompt: str, num_inference_steps: int = 200, height=512, width=512) -> Image:
     print(f"Running T2I v2: {prompt}")
-    import torch
-    from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
+    generator, pipe = init_v2(num_inference_steps)
 
+    image = pipe(prompt, guidance_scale=7.5, height=height, width=width,
+                 num_inference_steps=num_inference_steps, generator=generator).images[0]
+
+    return image
+
+
+@lru_cache(maxsize=1)
+def init_v2(num_inference_steps) -> tuple[torch.Generator, StableDiffusionPipeline]:
     model_id = "stabilityai/stable-diffusion-2-1"
-
     # Use the DPMSolverMultistepScheduler (DPM-Solver++) scheduler here instead
     pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
     scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
     scheduler.set_timesteps(num_inference_steps)
     generator = torch.Generator(device="cuda")
     generator.manual_seed(randint(0, 64000))  # Diverse results at each run
-
     pipe.scheduler = scheduler
     pipe = pipe.to("cuda")
-
-    image = pipe(prompt, guidance_scale=7.5, height=height, width=width,
-                 num_inference_steps=num_inference_steps, generator=generator).images[0]
-
-    return image
+    return generator, pipe
 
 
 def text2image_hyper(prompt: str, num_inference_steps: int = 1) -> Image:
