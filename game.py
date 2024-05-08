@@ -119,7 +119,7 @@ if __name__ == "__main__":
         current_situation, _ = GameNarrator.describe_current_situation(game_state)
         options, json_str = GameNarrator.generate_options(current_situation["long_description"])
         current_info = "INFO"
-        initial_image = text2image(current_situation["short_description"])
+        initial_image = text2image(current_situation["short_description"], fast=True)
 
     # Theme quickly generated using https://www.gradio.app/guides/theming-guide - try it and change some more!
     theme = gr.themes.Soft(

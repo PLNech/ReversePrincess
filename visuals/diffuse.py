@@ -205,10 +205,10 @@ def load_lora_pipe():
     return pipe
 
 
-def text2image(story: str, style: str = "", save: bool = True) -> Image:
+def text2image(story: str, style: str = "", fast=False, save: bool = True) -> Image:
     """Use our current best text2image model, with wrapping of story."""
     prompt = wrap_story(story, style)
-    image: Image = text2image_v2(prompt)
+    image: Image = text2image_v2(prompt, 50 if fast else 150)
     if save:
         key = f"{story[:80]}".strip().replace(" ", "_")
         time = int(datetime.datetime.now().timestamp())
