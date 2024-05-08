@@ -115,7 +115,7 @@ def text2image_manual(prompt: str) -> Image:
     return image
 
 
-def text2image_v2(prompt: str, num_inference_steps: int = 200, height=512, width=512) -> Image:
+def text2image_v2(prompt: str, num_inference_steps: int = 150, height=512, width=512) -> Image:
     print(f"Running T2I v2: {prompt}")
     generator, pipe = init_v2(num_inference_steps)
 
@@ -127,6 +127,9 @@ def text2image_v2(prompt: str, num_inference_steps: int = 200, height=512, width
 
 @lru_cache(maxsize=1)
 def init_v2(num_inference_steps) -> tuple[torch.Generator, StableDiffusionPipeline]:
+    """
+    Initialize and cache the Generator and Pipeline used for our V2 StableDiffusion back-end.
+    """
     model_id = "stabilityai/stable-diffusion-2-1"
     # Use the DPMSolverMultistepScheduler (DPM-Solver++) scheduler here instead
     pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
@@ -186,7 +189,7 @@ def upscale(prompt: str, image: Image) -> Image:
     pipeline = pipeline.to("cuda")
 
     upscaled_image = pipeline(prompt=prompt, image=image).images[0]
-    upscaled_image.save("upsampled_cat.png")
+    # upscaled_image.save("upsampled_cat.png")
     return upscaled_image
 
 
