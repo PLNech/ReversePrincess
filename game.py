@@ -76,6 +76,8 @@ def respond(button: str, chat_history, style, prev_image, json_src):
     chat_history.append((button, None))  # Add immediately the player's chosen action
     yield "", "", "", chat_history, "", prev_image, json_src
     gr.Info(f"Generating action image: {button}...")
+    # TODO: Could we generate image on interval in background?
+    #  E.G. Using https://www.gradio.app/guides/running-background-tasks
     image: Image = text2image(f"The princess acts: {button}", IMAGE_STYLES[style])
     yield "", "", "", chat_history, "", image, json_src
 

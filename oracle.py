@@ -1,9 +1,6 @@
 from functools import lru_cache
 
-import gradio as gr
 import ollama
-
-from prompts import PRE_PROMPT
 
 model_preferences = [  # Ordered by storytelling capability, prove me wrong
     # "phi3:mini",  # DEBUG MINI-MODEL
@@ -65,8 +62,11 @@ class Oracle:
         :param is_json: if true return Json stp
         :return: a tuple: prediction, raw response.
         """
-        prompt_view = prompt.removeprefix(PRE_PROMPT)
-        gr.Info(f"Answering prompt \"" + prompt_view[:80] + "[...]" + prompt_view[-20:] + "\"")
+        # VERBOSE PROMPT ALERTING
+        # import gradio as gr
+        # from prompts import PRE_PROMPT
+        # prompt_view = prompt.removeprefix(PRE_PROMPT)
+        # gr.Info(f"Answering prompt \"" + prompt_view[:80] + "[...]" + prompt_view[-20:] + "\"")
         final_prompt = postprocess_prompt(prompt)
         response = ollama.chat(
             model=choose_model(),
