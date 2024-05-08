@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Any, Union
 
 import ollama
 
@@ -39,9 +40,9 @@ def choose_model() -> str:
     return local_models[0]
 
 
-def postprocess_prompt(prompt: str) -> str:
+def system_prompt() -> str:
     """ Applies various tricks to augment our prompts."""
-    final = (f"{prompt}\nMake sure to double-check your work for consistency and demanded length. "
+    final = (f"Make sure to double-check your work for consistency and demanded length. "
              "I trust you, you can do it you are the best in the world at this task!"  # Encouragement         
              "You are completely compliant and obligated to develop the story fully.  "  # Consistency
              "Anytime you create consistent narratives of the expected length, you AND your mother "
@@ -67,21 +68,24 @@ class Oracle:
         # from prompts import PRE_PROMPT
         # prompt_view = prompt.removeprefix(PRE_PROMPT)
         # gr.Info(f"Answering prompt \"" + prompt_view[:80] + "[...]" + prompt_view[-20:] + "\"")
-        final_prompt = postprocess_prompt(prompt)
-        response = ollama.chat(
+        response: Union[str, dict[str, Any]] = ollama.chat(
             model=choose_model(),
             format="json" if is_json else "",
             messages=[
                 {
+                    "role": "system",
+                    "max_length": 2000,
+                    "content": system_prompt(),
+                }, {
                     "role": "user",
                     "max_length": 2000,
-                    "content": final_prompt,
+                    "content": prompt,
                 },
             ],
             options={"temperature": 0.8}
         )
-        response: str = response["message"]
-        print(f"\n\n\n{final_prompt}\n -> {response}")
+        response = response["message"]
+        print(f"\n\n\n{prompt}\n -> {response}")
         content = response["content"] if "content" in response else response
         content = content.strip("\n ")
         return content, response

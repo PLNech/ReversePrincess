@@ -120,11 +120,12 @@ if __name__ == "__main__":
         options = ["Do a barrel roll", "Dance him to death", "What would Jesus do???"]
         json_str = json.dumps(options)
         current_info = GameNarrator.display_information(game_state)
+        initial_image = None
     else:
         current_situation, _ = GameNarrator.describe_current_situation(game_state)
         options, json_str = GameNarrator.generate_options(current_situation["long_description"])
         current_info = "INFO"
-        initial_image = text2image("A powerful princess trapped in a castle")
+        initial_image = text2image(current_situation["short_description"])
 
     # Theme quickly generated using https://www.gradio.app/guides/theming-guide - try it and change some more!
     theme = gr.themes.Soft(
@@ -135,9 +136,8 @@ if __name__ == "__main__":
         body_background_fill='*block_background_fill',
         body_text_size='*text_lg'
     )
-    with gr.Blocks(title="Reverse Princess Simulator", css="footer{display:none !important}", theme=theme,
-                   analytics_enabled=False
-                   ) as demo:
+    with gr.Blocks(title="Reverse Princess Simulator", css="footer{display:none !important}",
+                   theme=theme, analytics_enabled=False) as demo:
         with gr.Row(elem_classes=["box_main"]) as row1:
             with gr.Column(scale=3, elem_classes=["box_chat"]):
                 chatbot = gr.Chatbot(
@@ -164,7 +164,7 @@ if __name__ == "__main__":
 
                 image_style = gr.Dropdown(label="Illustration style", interactive=True,
                                           choices=IMAGE_STYLE_NAMES, value=IMAGE_STYLE_DEFAULT)
-                illustration = gr.Image(show_label=False, value=initial_image, interactive=False, label=None)
+                illustration = gr.Image(show_label=False, value=initial_image, interactive=False, streaming=False)
                 json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
 
         outputs = [action1, action2, action3, chatbot, situation, illustration, json_view]
