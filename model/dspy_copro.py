@@ -108,7 +108,7 @@ def my_copro():
 
     from dspy.evaluate import Evaluate
 
-    def validate_readable(example: dspy.Example, pred: dspy.Prediction, trace=None) -> float:
+    def validate_readable(_: dspy.Example, pred: dspy.Prediction, trace=None) -> float:
         """ True if the text is at least fairly easy to read.
 
         Returns:
@@ -116,7 +116,7 @@ def my_copro():
         """
         return textstat.flesch_reading_ease(pred.answer.lower()) / 100
 
-    def validate_short(example: dspy.Example, pred: dspy.Prediction, trace=None) -> float:
+    def validate_short(_: dspy.Example, pred: dspy.Prediction, trace=None) -> float:
         """ True if the text is quick to read.
 
         Returns:
