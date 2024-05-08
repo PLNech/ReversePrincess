@@ -43,19 +43,18 @@ class GameNarrator:
 
     @staticmethod
     def generate_options(situation: str = None, retries: int = 5) -> tuple[list[str], str]:
-        prompt = (
-            f"{PRE_PROMPT} Generate three potential actions the princess could do now."
-            f"The current situation for the princess is the following:\n"
-            f"{situation}\n"
-            f"What could she try? Generate three options and reply in valid JSON "
-            f"with your three options under the key 'options', as an array of strings. "
-            f"Every option should be a short, complete subject-verb-object phrase with an action verb, under 15 words. "
-            "At least one option should be daring, or even perilous. ",
-            f"For example :\n"
-            '{"options": ["She jumps from her hiding place and tries to open the cell door.", '
-            '"She looks around for a solution to the puzzle.", '
-            '"She waits for an opportunity to reason him."]}'
-        )
+        prompt: str = (f"{PRE_PROMPT} Generate three potential actions the princess could do now."
+                       f"The current situation for the princess is the following:\n"
+                       f"{situation}\n"
+                       f"What could she try? Generate three options and reply in valid JSON "
+                       f"with your three options under the key 'options', as an array of strings. "
+                       f"Every option should be a short, complete subject-verb-object phrase with an action verb, under 15 words. "
+                       "At least one option should be daring, or even perilous. "
+                       f"For example :\n"
+                       '{"options": ["She jumps from her hiding place and tries to open the cell door.", '
+                       '"She looks around for a solution to the puzzle.", '
+                       '"She waits for an opportunity to reason him."]}'
+                       )
         for _ in range(retries):
             try:
                 options, response = Oracle.predict(prompt, is_json=True)
