@@ -210,7 +210,7 @@ def text2image(story: str, style: str = "", fast=False, save: bool = True) -> Im
     prompt = wrap_story(story, style)
     image: Image = text2image_v2(prompt, 50 if fast else 150)
     if save:
-        key = f"{story[:80]}".strip().replace(" ", "_")
+        key = f"{story[:80]}".strip().replace(" ", "_").strip("#,\n")
         time = int(datetime.datetime.now().timestamp())
         if not os.path.exists("./generated/images/"):
             os.mkdir("./generated/images/")
