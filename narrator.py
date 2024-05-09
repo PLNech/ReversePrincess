@@ -74,17 +74,15 @@ class GameNarrator:
         print("DESCRIBING ACTION... ", end="")
         result_score = random.randint(1, 10)
         if result_score > 9:
-            result = "This action works even better than expected !"
+            result = "This action works even better than expected ! The story will progress a lot with new advantages."
         elif result_score > 5:
-            result = "The action works as intended."
+            result = "The action works as intended. This makes the story progress."
         elif result_score > 3:
-            result = "The action partially works, partially fails."
+            result = "The action partially works, partially fails. The story moves forward with negative consequences."
         elif result_score > 2:
-            result = "This action fails."
+            result = "This action fails. There is now a new challenge to face."
         else:
-            result = (
-                "This action fails epic, putting the princess in big trouble."
-            )
+            result = "This action fails epic, putting the princess in big trouble to address immediately."
 
         prompt = (
             f"{PRE_PROMPT} Determine what happens after this action."
