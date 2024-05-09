@@ -105,7 +105,16 @@ def respond(button: str, chat_history, json_src: str, achievements: dict):
 
 
 def update_image(chat_history, style):
-    last_action_text = ",".join([x for x in chat_history[-1] if x is not None])
+    history_texts = [c for x in chat_history for c in x if c is not None]
+    selected = [t for t in history_texts if len(t) < 140]  # CLIP: 77 tokens
+    selected_history = selected if selected else history_texts
+    last_action_text = ",".join([x for x in selected_history])
+    if "##" in last_action_text:
+        try:
+            last_action_text = last_action_text.split("##")[2]
+        except Exception:
+            pass
+
     gr.Info(f"Generating action image in style {style}: {last_action_text[:20]}...")
     image: Image = text2image(f"{last_action_text}", IMAGE_STYLES[style])
     return image
