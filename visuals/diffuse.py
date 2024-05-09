@@ -130,6 +130,7 @@ def init_v2(num_inference_steps) -> tuple[torch.Generator, StableDiffusionPipeli
     """
     Initialize and cache the Generator and Pipeline used for our V2 StableDiffusion back-end.
     """
+    print("Initializing Text2ImageV2 components.")
     model_id = "stabilityai/stable-diffusion-2-1"
     # Use the DPMSolverMultistepScheduler (DPM-Solver++) scheduler here instead
     pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
@@ -210,7 +211,19 @@ def text2image(story: str, style: str = "", fast=False, save: bool = True) -> Im
     prompt = wrap_story(story, style)
     image: Image = text2image_v2(prompt, 50 if fast else 150)
     if save:
-        key = f"{story[:80]}".strip().replace(" ", "_").strip("#,\n")
+        key = (f"{story[:80]}".strip()
+               .replace(" ", "_")
+               .replace("#", "")
+               .replace(",", "")
+               .replace(":", "")
+               .replace(";", "")
+               .replace(".", "")
+               .replace("\n", "")
+               .replace("\t", "")
+               .replace("\\", "")
+               .replace("/10", "") # Dice rolls don't make great filenames :')
+               .replace("/", "")
+               )
         time = int(datetime.datetime.now().timestamp())
         if not os.path.exists("./generated/images/"):
             os.mkdir("./generated/images/")

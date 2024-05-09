@@ -1,7 +1,7 @@
 import json
 import random
 from json import JSONDecodeError
-from typing import Any
+from typing import Any, Optional
 
 import gradio as gr
 
