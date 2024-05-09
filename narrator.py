@@ -110,7 +110,7 @@ class GameNarrator:
         print("LOCATING... ", end="")
         gr.Info(f"Locating princess...")
         prompt = (
-            f"{PRE_PROMPT} determine the current location of the princess. "
+            f"{PRE_PROMPT} determine the current location of the princess within the story's environment. "
             f"Given the following story:\n{game_state.history_so_far()}"
             f"Where is the princess? Reply in a few words. Examples: \"In the wine cellar\", "
             f"or \"On the roof under strong winds\", or \"In the kitchen\"."
