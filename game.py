@@ -78,28 +78,28 @@ def respond(button: str, chat_history, json_src: str, achievements: dict):
     yield "", "", "", chat_history, "", json_src
 
     action_results, json_output, d10 = GameNarrator.describe_action_result(game_state, button)
-    game_state.update([action_results["short_description"], action_results["long_description"]])
+    game_state.update([action_results["short_version"], action_results["long_version"]])
     achievements["rolls"].append(d10)
-    chat_history.append((None, f"## Action Result: rolled a {d10}/10\n###  {action_results['short_description']}  \n"
-                               f"{action_results['long_description']}"
+    chat_history.append((None, f"## Action Result: rolled a {d10}/10 🔷\n###  {action_results['short_version']}  \n"
+                               f"{action_results['long_version']}"
                          ))  # Display action result
     yield "", "", "", chat_history, "", json_output
 
     # TODO: I think in the end this step makes the actions less impactful,
     #  As a player I often don't see much link between previous action and next options
     # descriptions, json_output = GameNarrator.describe_current_situation(game_state)
-    # game_state.update([action_results["long_description"], descriptions["long_description"]])
+    # game_state.update([action_results["long_version"], descriptions["long_version"]])
     ## Then display resulting position
-    # chat_history.append((None, f"## {descriptions['short_description']}\n{descriptions['long_description']}"))
+    # chat_history.append((None, f"## {descriptions['short_version']}\n{descriptions['long_version']}"))
     # yield "", "", "", chat_history, "", json_output
 
     location, _ = GameNarrator.current_location(game_state)
     objective, _ = GameNarrator.current_objective(game_state)
-    game_state.update(None, location["short_description"], objective)
+    game_state.update(None, location["short_version"], objective)
 
     new_situation = GameNarrator.display_information(game_state)
     print(f"FINAL SITUATION: {new_situation}")
-    new_options, response = GameNarrator.generate_options(new_situation, action_results['long_description'])
+    new_options, response = GameNarrator.generate_options(new_situation, action_results['long_version'])
     print(f"FINAL OPTIONS: {new_options}")
     yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, response
 
@@ -115,7 +115,7 @@ def update_image(chat_history, style):
         except Exception:
             pass
 
-    gr.Info(f"Generating action image in style {style}: {last_action_text[:20]}...")
+    # gr.Info(f"Generating action image in style {style}: {last_action_text[:20]}...")
     image: Image = text2image(f"{last_action_text}", IMAGE_STYLES[style])
     return image
 
@@ -125,16 +125,16 @@ if __name__ == "__main__":
     game_state = GameState(INTRO)
 
     if DEBUG_LOCAL_INIT:
-        current_situation = {"long_description": INTRO}
+        current_situation = {"long_version": INTRO}
         options = ["Do a barrel roll", "Dance him to death", "What would Jesus do???"]
         json_str = json.dumps(options)
         current_info = GameNarrator.display_information(game_state)
         initial_image = None
     else:
         current_situation, _ = GameNarrator.describe_current_situation(game_state)
-        options, json_str = GameNarrator.generate_options(current_situation["long_description"])
+        options, json_str = GameNarrator.generate_options(current_situation["long_version"])
         current_info = "INFO"
-        initial_image = text2image(current_situation["short_description"], fast=True)
+        initial_image = text2image(current_situation["short_version"], fast=True)
 
     # Theme quickly generated using https://www.gradio.app/guides/theming-guide - try it and change some more!
     theme = gr.themes.Soft(

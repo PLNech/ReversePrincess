@@ -22,13 +22,13 @@ class GameNarrator:
             f"The princess is currently at this location: {game_state.current_location}\n"
             f"The princess has the following goal: {game_state.current_objective}\n"
             f"Return a JSON object describing her current situation. "
-            f"You must include at top-level a 'short_description' under 20 words and a 'long_description' under 100 words."
+            f"You must include at top-level a 'short_version' under 8 words and a 'long_version' under 20 words."
         )
         for i in range(retries):
             try:
                 prediction, source = Oracle.predict(prompt, is_json=True)
                 descriptions = json.loads(prediction)
-                assert "short_description" in descriptions and "long_description" in descriptions
+                assert "short_version" in descriptions and "long_version" in descriptions
                 return descriptions, source
             except (JSONDecodeError, AssertionError):
                 continue
@@ -91,14 +91,14 @@ class GameNarrator:
             f"The result determined by a d10 dice roll was {result_score}/10: '{result}'\n"
             f"Describe what happens to her next in a maximum of three short sentences."
             f"Return a JSON object describing the results of her action."
-            f"You must include at top-level a 'short_description' under 20 words and a 'long_description' under 100 words."
+            f"You must include at top-level a 'short_version' under 20 words and a 'long_version' under 100 words."
         )
         gr.Info(f"Describing action result: \"{action} -> {result}\"")
         for i in range(retries):
             try:
                 prediction, source = Oracle.predict(prompt, is_json=True)
                 descriptions = json.loads(prediction)
-                assert "short_description" in descriptions and "long_description" in descriptions
+                assert "short_version" in descriptions and "long_version" in descriptions
                 print(descriptions)
                 return descriptions, source, result_score
             except (JSONDecodeError, AssertionError):
@@ -115,14 +115,14 @@ class GameNarrator:
             f"Where is the princess? Reply in a few words. Examples: \"In the wine cellar\", "
             f"or \"On the roof under strong winds\", or \"In the kitchen\"."
             f"Return a JSON object describing her current location. "
-            f"You must include at top-level a 'short_description' under 20 words "
-            f"and a 'long_description' under 100 words."
+            f"You must include at top-level a 'short_version' under 8 words "
+            f"and a 'long_version' under 20 words."
         )
         for i in range(retries):
             try:
                 prediction, source = Oracle.predict(prompt, is_json=True)
                 descriptions = json.loads(prediction)
-                assert "short_description" in descriptions and "long_description" in descriptions
+                assert "short_version" in descriptions and "long_version" in descriptions
                 return descriptions, source
             except (JSONDecodeError, AssertionError):
                 continue
