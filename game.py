@@ -85,11 +85,13 @@ def respond(button: str, chat_history, json_src: str, achievements: dict):
                          ))  # Display action result
     yield "", "", "", chat_history, "", json_output
 
-    descriptions, json_output = GameNarrator.describe_current_situation(game_state)
-    game_state.update([action_results["long_description"], descriptions["long_description"]])
-    # Then display resulting position
-    chat_history.append((None, f"## {descriptions['short_description']}\n{descriptions['long_description']}"))
-    yield "", "", "", chat_history, "", json_output
+    # TODO: I think in the end this step makes the actions less impactful,
+    #  As a player I often don't see much link between previous action and next options
+    # descriptions, json_output = GameNarrator.describe_current_situation(game_state)
+    # game_state.update([action_results["long_description"], descriptions["long_description"]])
+    ## Then display resulting position
+    # chat_history.append((None, f"## {descriptions['short_description']}\n{descriptions['long_description']}"))
+    # yield "", "", "", chat_history, "", json_output
 
     location, _ = GameNarrator.current_location(game_state)
     objective, _ = GameNarrator.current_objective(game_state)
@@ -97,7 +99,7 @@ def respond(button: str, chat_history, json_src: str, achievements: dict):
 
     new_situation = GameNarrator.display_information(game_state)
     print(f"FINAL SITUATION: {new_situation}")
-    new_options, response = GameNarrator.generate_options(new_situation)
+    new_options, response = GameNarrator.generate_options(new_situation, action_results['long_description'])
     print(f"FINAL OPTIONS: {new_options}")
     yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, response
 

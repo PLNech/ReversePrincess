@@ -42,11 +42,13 @@ class GameNarrator:
         )
 
     @staticmethod
-    def generate_options(situation: str = None, retries: int = 5) -> tuple[list[str], str]:
-        prompt: str = (f"{PRE_PROMPT} Generate three potential actions the princess could do now."
+    def generate_options(situation: str, last_action_results: Optional[str] = None,
+                         retries: int = 5) -> tuple[list[str], str]:
+        prompt: str = (f"{PRE_PROMPT} Generate three potential actions the princess could do now. "
+                       f"Was there an action before? {last_action_results}\n"
                        f"The current situation for the princess is the following:\n"
                        f"{situation}\n"
-                       f"What could she try? Generate three options and reply in valid JSON "
+                       f"What should she try? Generate three options and reply in valid JSON "
                        f"with your three options under the key 'options', as an array of strings. "
                        f"Every option should be a short, complete subject-verb-object phrase with an action verb, under 15 words. "
                        "At least one option should be daring, or even perilous. "
@@ -115,8 +117,8 @@ class GameNarrator:
             f"Where is the princess? Reply in a few words. Examples: \"In the wine cellar\", "
             f"or \"On the roof under strong winds\", or \"In the kitchen\"."
             f"Return a JSON object describing her current location. "
-            f"You must include at top-level a 'short_description' under 20 words and a 'long_description' under 100 words."
-
+            f"You must include at top-level a 'short_description' under 20 words "
+            f"and a 'long_description' under 100 words."
         )
         for i in range(retries):
             try:
