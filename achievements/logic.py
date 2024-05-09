@@ -74,6 +74,11 @@ def check_sequence_achievements(state: dict) -> None:
             display("666 🦹", "Diabolically partial success!")
             state["achievements"]["roll_666"] = True
 
+    if "roll_777" not in state["achievements"]:
+        if "777" in sequence:
+            display("🎰 777 🎰", "CASINO MODE! ALL PLAY IS NOW FREE 💸")
+            state["achievements"]["roll_777"] = True
+
 
 def check_history(chat_history: list[list[Optional[str]]], state: dict) -> None:
     score_ai_words, score_ai_avoid = 0, 0
