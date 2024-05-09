@@ -6,6 +6,8 @@ from typing import Any, Optional
 import gradio as gr
 from PIL.Image import Image
 
+from achievements.logic import init_achievements
+from achievements.logic import update_achievements
 from narrator import GameNarrator
 from oracle import choose_model
 from prompts import INTRO, IMAGE_STYLE_NAMES, IMAGE_STYLES, IMAGE_STYLE_DEFAULT
@@ -51,7 +53,7 @@ def save_generation(prompt: str, response: str, model: Optional[str] = None, ext
         json.dump(data.__dict__, file)
 
 
-def respond(button: str, chat_history, json_src):
+def respond(button: str, chat_history, json_src: str, achievements: dict):
     """
     Respond to the user's choice, advancing the story.
 
@@ -67,8 +69,7 @@ def respond(button: str, chat_history, json_src):
 
     :param button: user choice
     :param chat_history: stateful history so far
-    :param style: selected illustration style
-    :param prev_image: maintain image during generation
+    :param achievements: state of achievements and related data
     :param json_src: maintain displayed JSON until generation updates it
     :return:
     """
@@ -77,6 +78,8 @@ def respond(button: str, chat_history, json_src):
     yield "", "", "", chat_history, "", json_src
 
     action_results, json_output, d10 = GameNarrator.describe_action_result(game_state, button)
+    game_state.update([action_results["short_description"], action_results["long_description"]])
+    achievements["rolls"].append(d10)
     chat_history.append((None, f"## Action Result: rolled a {d10}/10\n###  {action_results['short_description']}  \n"
                                f"{action_results['long_description']}"
                          ))  # Display action result
@@ -105,6 +108,7 @@ def update_image(chat_history, style):
     image: Image = text2image(f"{last_action_text}", IMAGE_STYLES[style])
     return image
 
+
 if __name__ == "__main__":
     print("Running game!")
     game_state = GameState(INTRO)
@@ -132,44 +136,51 @@ if __name__ == "__main__":
     )
     with gr.Blocks(title="Reverse Princess Simulator", css="footer{display:none !important}",
                    theme=theme, analytics_enabled=False) as demo:
-        with gr.Row(elem_classes=["box_main"]) as row1:
-            with gr.Column(scale=3, elem_classes=["box_chat"]):
-                chatbot = gr.Chatbot(
-                    label="Damsell in Prowess",
-                    elem_classes=["box_chatbot"],
-                    value=[[None, INTRO]],
-                    scale=3,
-                    height=512
-                )
+        achievements_store: gr.State = init_achievements()
 
-                with gr.Row(elem_classes=["box_buttons"]) as row2:
-                    print("Loading initial choice... ", end="")
-                    print(f"Buttons: {options}")
+        with gr.Tabs() as tabs:
+            with gr.Tab(label="The Game"):
+                with gr.Row(elem_classes=["box_main"]) as row1:
+                    with gr.Column(scale=3, elem_classes=["box_chat"]):
+                        chatbot = gr.Chatbot(
+                            label="Damsell in Prowess",
+                            elem_classes=["box_chatbot"],
+                            value=[[None, INTRO]],
+                            scale=3,
+                            height=512
+                        )
 
-                    action1 = gr.Button(f"{options[0]}")
-                    action2 = gr.Button(f"{options[1]}")
-                    action3 = gr.Button(f"{options[2]}")
+                        with gr.Row(elem_classes=["box_buttons"]) as row2:
+                            print("Loading initial choice... ", end="")
+                            print(f"Buttons: {options}")
 
-            with gr.Column(scale=1, elem_classes=["box_info"]) as col:
-                situation = gr.TextArea(
-                    label="Current situation",
-                    value=current_info,
-                    scale=1,
-                )
+                            action1 = gr.Button(f"{options[0]}")
+                            action2 = gr.Button(f"{options[1]}")
+                            action3 = gr.Button(f"{options[2]}")
 
-                image_style = gr.Dropdown(label="Illustration style", interactive=True,
-                                          choices=IMAGE_STYLE_NAMES, value=IMAGE_STYLE_DEFAULT)
-                illustration = gr.Image(show_label=False, value=initial_image, interactive=False)
-                json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
+                    with gr.Column(scale=1, elem_classes=["box_info"]) as col:
+                        situation = gr.TextArea(
+                            label="Current situation",
+                            value=current_info,
+                            scale=1,
+                        )
+
+                        image_style = gr.Dropdown(label="Illustration style", interactive=True,
+                                                  choices=IMAGE_STYLE_NAMES, value=IMAGE_STYLE_DEFAULT)
+                        illustration = gr.Image(show_label=False, value=initial_image, interactive=False)
+                        json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
+            with gr.Tab(label="Achievements"):
+                    achievements_display = gr.Markdown()
 
         outputs = [action1, action2, action3, chatbot, situation, json_view]
-        inputs = [chatbot, json_view]
+        inputs = [chatbot, json_view, achievements_store]
 
         action1.click(respond, [action1, *inputs], outputs)
         action2.click(respond, [action2, *inputs], outputs)
         action3.click(respond, [action3, *inputs], outputs)
 
         chatbot.change(update_image, [chatbot, image_style], illustration)
+        chatbot.change(update_achievements, [chatbot, achievements_store], [achievements_display])
 
     demo.queue()
     demo.launch(allowed_paths=["static/"], favicon_path="static/princess.ico")
