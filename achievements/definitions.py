@@ -1,5 +1,6 @@
 """Definitions for individual achievements."""
 from dataclasses import dataclass
+from functools import lru_cache
 
 
 @dataclass
@@ -50,11 +51,40 @@ class SequenceAchievement(Achievement):
         return f"{super().__repr__()}(Seq {self.sequence})"
 
 
+@dataclass
+class TextAchievement(Achievement):
+    """An achievement which triggers on a specific keyword/sentence in history."""
+    keyword: str = "..."
+    times: int = 1
+
+    def __init__(self, keyword: str, title: str, text: str, times: int = 1, unlocked: bool = False):
+        self.keyword = keyword
+        self.times = times
+        key = f"kw_{keyword}_{times}"
+        super().__init__(key, title, text, unlocked)
+
+    def match(self, haystack: str) -> bool:
+        """ True if the haystack matches this achievement's setup."""
+        return self.counter(self.keyword, haystack) >= self.times
+
+    @staticmethod
+    @lru_cache(maxsize=128)
+    def counter(key: str, haystack: str) -> int:
+        """Cached counter to memoize multi-count achievements."""
+        return haystack.count(key)
+
+    def __repr__(self):
+        return f"{super().__repr__()}(KW {self.keyword})"
+
+
 achievements_list: list[Achievement] = [
+    # General ones
     Achievement("hello", "First achievement 🕊️", "Hello you :3"),
+    # Rolls
     RollAchievement(1, "Roll fail 🎲", "C'est terrible ce qui t'arrive mec, TERRIBLE !"),
     RollAchievement(8, "Roll 8", "Lucky 8 🍀"),
     RollAchievement(10, "Roll win 🌈", "Living the life 😎"),
+    # Sequences
     SequenceAchievement("13", "Hey you :3", "It's dangerous to go alone, take this 🍀"),
     SequenceAchievement("00", "Double Zero 🎯", "What are the chances??"),
     SequenceAchievement("007", "Agent Bond 🔫", "Quite a bad roll though"),
@@ -63,9 +93,15 @@ achievements_list: list[Achievement] = [
     SequenceAchievement("555", "555 🔥", "🎸 if you're 5-5-5 I'm 666 🤟"),
     SequenceAchievement("666", "666 🦹", "Diabolically partial success!"),
     SequenceAchievement("777", "🎰 777 🎰", "CASINO MODE! ALL PLAY IS NOW FREE 💸"),
+    # Keywords
+    TextAchievement("delve", "Delve First 💡", "Delving like the pros my dude!"),
+    TextAchievement("delve", "Delve the Second 👑", "Let's delve into bad speech habits.", 2),
+    TextAchievement("delve", "Delve the Third 🥉", "Delve, delve and delve again!", 3),
+    TextAchievement("delve", "D-D-D-D-DELVE", "Let's delve into the intricate world of delving.", 5),
 ]
 achievements_map: dict[str, Achievement] = {a.key: a for a in achievements_list}
 achievements_rolls: list[RollAchievement] = [a for a in filter(lambda a: type(a) is RollAchievement, achievements_list)]
+achievements_text: list[TextAchievement] = [a for a in filter(lambda a: type(a) is TextAchievement, achievements_list)]
 achievements_sequence: list[SequenceAchievement] = [
     a for a in filter(lambda a: type(a) is SequenceAchievement, achievements_list)]
 

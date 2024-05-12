@@ -3,7 +3,7 @@ from typing import Optional
 
 import gradio as gr
 
-from achievements.definitions import achievements_map, achievements_rolls, achievements_sequence
+from achievements.definitions import achievements_map, achievements_rolls, achievements_sequence, achievements_text
 
 
 def display_raw(title: str, text: str):
@@ -33,21 +33,41 @@ def update_achievements(chat_history: list[list[Optional[str]]], state: dict) ->
         check_history(chat_history, state)
 
     achievement_text = "# Achievements  \n"
-    current_achievements = state.get("achievements", None)
+    current_achievements = state.get("achievements", [])
+    done = []
+
+    if not current_achievements:
+        return achievement_text
 
     # VISIBLE ACHIEVEMENTS
     # Rolls
     achievement_text += "## Rolls  \n"
     for roll in achievements_rolls:
         if roll.key in current_achievements:
-            achievement_text += f"### 🔓 {roll.title}  \n{roll.text}  \n"
+            achievement_text += f"### 🔓 {roll.title}  \n> {roll.text}  \n"
+            done.append(roll.key)
     # Sequences
     achievement_text += "## Sequences  \n"
     for sequence in achievements_sequence:
         if sequence.key in current_achievements:
-            achievement_text += f"### 🔓 {sequence.title}  \n{sequence.text}  \n"
+            achievement_text += f"### 🔓 {sequence.title}  \n> {sequence.text}  \n"
+            done.append(sequence.key)
+    # Texts
+    achievement_text += "## Sacred Texts  \n"
+    for text in achievements_text:
+        if text.key in current_achievements:
+            achievement_text += f"### 🔓 {text.title}  \n> {text.text}  \n"
+            done.append(text.key)
+
+    remains = [r for r in current_achievements if r not in done]
+    if remains:
+        achievement_text += f"## Others\n"
+        for r_key in remains:
+            last = achievements_map[r_key]
+            achievement_text += f"#### 🔓 {last.title}  \n> {last.text}  \n"
 
     # TODO SECRET ACHIEVEMENTS
+    achievement_text += "\n## Secret Unlocks 🙊 \n"
     return achievement_text
 
 
@@ -74,20 +94,10 @@ def check_history(chat_history: list[list[Optional[str]]], state: dict) -> None:
     score_ai_words, score_ai_avoid = 0, 0
     fulltext = ",".join([t for h in chat_history for t in h if t is not None])
 
-    if "delve" in fulltext:
-        count_delve = fulltext.count("delve")
-        if count_delve > 1 and "delve_1" not in state["achievements"]:
-            display_raw("Delve First 💡", "Delving like the pros my dude!")
-            state["achievements"]["delve_1"] = True
-        if count_delve > 2 and "delve_2" not in state["achievements"]:
-            display_raw("Delve the Second 👑", "Let's delve into bad language habits.")
-            state["achievements"]["delve_2"] = True
-        if count_delve > 3 and "delve_3" not in state["achievements"]:
-            display_raw("Delve the Third 🥉", "Delve, delve and delve again!")
-            state["achievements"]["delve_3"] = True
-        if count_delve > 5 and "delve_5" not in state["achievements"]:
-            display_raw("D-D-D-D-DELVE", "Let's delve into the intricate world of delving.")
-            state["achievements"]["delve_5"] = True
+    for text in achievements_text:
+        if text.match(fulltext):
+            display(text.key)
+            state["achievements"][text.key] = True
 
     with open("./achievements/data/100_ai_words.txt", "r") as f:
         words = [w.strip() for w in f.readlines() if not w.startswith("#")]
