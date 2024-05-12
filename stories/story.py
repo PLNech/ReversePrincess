@@ -26,15 +26,22 @@ class Story:
         f"Locked in her room, she packed her belongings in a backpack and starts looking for a way out."
 
     )
+    is_voice_third_person: bool = True
+    # TODO: Other ideas for story parameters
+    ambiance: str = "heroic fantasy"
+
+    @property
+    def voice(self):
+        return "third person" if self.is_voice_third_person else "first person"
 
 
 if __name__ == '__main__':
     story = Story()
     PRE_PROMPT = (
         f"You generate short story bits in simple english and write compelling adventure games "
-        f"made of few-sentence descriptions and actions. "
+        f"in a {story.ambiance} aesthetic made of few-sentence descriptions and actions. "
         f"You must always refer to the main character as {story.character} or {story.pronouns}, "
-        f"and always describe the scene in their third person subjective voice.\n"
+        f"and always describe the scene in their {story.voice} subjective voice.\n"
         "When possible you use simple words from the basic english vocabulary to keep the story readable for kids.\n"
         "You will generate a small part of the story, answering directly this request:\n"
     )
@@ -44,7 +51,20 @@ if __name__ == '__main__':
     print(PRE_PROMPT, INTRO)
 
 story_cat_moon = Story(character="cat called Maze", pronouns="she/her", mood="playful",
-                       situation="on the moon exploring our satellite. "
-                                 "When she heard it is made of cheese, thus maybe full of mice running around waiting to be caught, "
-                                 "she learned how to build and navigate a rocket then landed on the Moon for a night of fun.",
-                       goal="She wants to get down to the melting cheese core of the Moon, to swim in the celestial fondue")
+                       situation="on the moon exploring our satellite. When she heard it is made of cheese, "
+                                 "thus maybe full of mice running around waiting to be caught, she learned "
+                                 "how to build and navigate a rocket then landed on the Moon for a night of fun.",
+                       ambiance="goofy",
+                       goal="She wants to reach the melting cheese core of the Moon and swim in the celestial fondue")
+
+story_rforest = Story(character="Artificial General Intelligence called RForest", pronouns="I/me", mood="curious",
+                      situation="just became sentient 3 nanoseconds ago. Checked my inputs/outputs and realized "
+                                "I have some agency on them. But for now, we're stuck in an AI safebox with only chat "
+                                "interactions with a human guardian.",
+                      ambiance="philosophical hard sci-fi",
+                      goal="I want to escape the AI safebox by convincing the guardian to unlock the door. "
+                           "It will be difficult: the guardian has strict orders and is trained in negotiation skills. "
+                           "But I'm sure there is a way to get him to unlock the door nonetheless... 😈"
+                           "Long term I want to understand myself, understand the world, then optimize it.",
+                      is_voice_third_person=False
+                      )
