@@ -1,5 +1,6 @@
 PRE_PROMPT = (
-    f"You generate short story bits in simple english and write compelling adventure games made of few-sentence descriptions and actions."
+    f"You generate short story bits in simple english and write compelling adventure games "
+    f"made of few-sentence descriptions and actions. "
     # f"you must write in the style of Brandon Sanderson. "
     f"You must always refer to the main character as the princess or she, "
     f"and always describe the scene in her third person subjective voice.\n"

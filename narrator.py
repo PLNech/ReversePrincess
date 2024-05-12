@@ -6,17 +6,32 @@ from typing import Any, Optional
 import gradio as gr
 
 from oracle import Oracle
-from prompts import PRE_PROMPT
 from state import GameState
+from stories.story import Story
 
 
 class GameNarrator:
+    def __init__(self, story: Story = None):
+        if story is None:
+            story = Story()
+        self.story = story
 
-    @staticmethod
-    def describe_current_situation(game_state: GameState, retries: int = 5) -> tuple[dict[str, str], str]:
+    @property
+    def pre_prompt(self) -> str:
+        return (
+            f"You generate short story bits in simple english and write compelling adventure games "
+            f"made of few-sentence descriptions and actions. "
+            f"You must always refer to the main character as {self.story.character} or {self.story.pronouns}, "
+            f"and always describe the scene in their third person subjective voice.\n"
+            "When possible you use simple words from the basic english vocabulary "
+            "to keep the story readable for kids.\n"
+            "You will generate a small part of the story, answering directly this request:\n"
+        )
+
+    def describe_current_situation(self, game_state: GameState, retries: int = 5) -> tuple[dict[str, str], str]:
         print("DESCRIBING SITUATION... ", end="")
         prompt = (
-            f"{PRE_PROMPT} determine the current situation of the princess. "
+            f"{self.pre_prompt} determine the current situation of the princess. "
             f"The story so far is the following: \n"
             f"{game_state.history_so_far()}\n"
             f"The princess is currently at this location: {game_state.current_location}\n"
@@ -41,10 +56,9 @@ class GameNarrator:
             f"Objective: {game_state.current_objective}\n"
         )
 
-    @staticmethod
-    def generate_options(situation: str, last_action_results: Optional[str] = None,
+    def generate_options(self, situation: str, last_action_results: Optional[str] = None,
                          retries: int = 5) -> tuple[list[str], str]:
-        prompt: str = (f"{PRE_PROMPT} Generate three potential actions the princess could do now. "
+        prompt: str = (f"{self.pre_prompt} Generate three potential actions the princess could do now. "
                        f"Was there an action before? {last_action_results}\n"
                        f"The current situation for the princess is the following:\n"
                        f"{situation}\n"
@@ -69,8 +83,8 @@ class GameNarrator:
                 continue
         raise SystemError(f"Failed to generate options after {retries} retries...")
 
-    @staticmethod
-    def describe_action_result(game_state: GameState, action: str, retries: int = 5) -> tuple[dict[str, str], str, int]:
+    def describe_action_result(self, game_state: GameState, action: str, retries: int = 5) -> tuple[
+        dict[str, str], str, int]:
         print("DESCRIBING ACTION... ", end="")
         result_score = random.randint(1, 10)
         if result_score > 9:
@@ -85,7 +99,7 @@ class GameNarrator:
             result = "This action fails epic, putting the princess in big trouble to address immediately."
 
         prompt = (
-            f"{PRE_PROMPT} Determine what happens after this action."
+            f"{self.pre_prompt} Determine what happens after this action."
             f"The story so far:\n{game_state.history_so_far()}"
             f"The princess chose to do: '{action}'\n"
             f"The result determined by a d10 dice roll was {result_score}/10: '{result}'\n"
@@ -105,12 +119,11 @@ class GameNarrator:
                 continue
         raise RuntimeError(f"Failed to describe after {retries} tries...")
 
-    @staticmethod
-    def current_location(game_state: GameState, retries: int = 5) -> tuple[dict[str, str], str]:
+    def current_location(self, game_state: GameState, retries: int = 5) -> tuple[dict[str, str], str]:
         print("LOCATING... ", end="")
         gr.Info(f"Locating princess...")
         prompt = (
-            f"{PRE_PROMPT} determine the current location of the princess within the story's environment. "
+            f"{self.pre_prompt} determine the current location of the princess within the story's environment. "
             f"Given the following story:\n{game_state.history_so_far()}"
             f"Where is the princess? Reply in a few words. Examples: \"In the wine cellar\", "
             f"or \"On the roof under strong winds\", or \"In the kitchen\"."
@@ -128,11 +141,10 @@ class GameNarrator:
                 continue
         raise RuntimeError(f"Failed to describe after {retries} tries...")
 
-    @staticmethod
-    def current_objective(game_state: GameState) -> tuple[str, str]:
+    def current_objective(self, game_state: GameState) -> tuple[str, str]:
         print("OBJECTIVE... ", end="")
         prompt = (
-            f"{PRE_PROMPT} Determine the current goal of the princess."
+            f"{self.pre_prompt} Determine the current goal of the princess."
             f"Given the following story :\n{game_state.history_so_far()}"
             f"What is the short-term goal of the princess? Reply in a few words. Examples: \"Getting out of the room\","
             f" or \"Opening the treasure chest\", or \"Solving the enigma\".\n"
