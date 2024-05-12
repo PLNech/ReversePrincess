@@ -9,7 +9,7 @@ class MyTestCase(unittest.TestCase):
     # def test_something(self):
     #     prompt = f""
     #     state = GameState(f"")
-    #     location = GameNarrator.current_location(state)
+    #     location = GameNarrator().current_location(state)
     #
     #     readability = textstat.flesch_reading_ease(response)
     #     self.assertGreater(readability, 50)

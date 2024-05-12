@@ -66,7 +66,7 @@ def respond(button: str, chat_history, json_src: str, achievements: dict):
     chat_history.append((button, None))  # Add immediately the player's chosen action
     yield "", "", "", chat_history, "", json_src
 
-    action_results, json_output, d10 = GameNarrator.describe_action_result(game_state, button)
+    action_results, json_output, d10 = narrator.describe_action_result(game_state, button)
     game_state.update([action_results["short_version"], action_results["long_version"]])
     achievements["rolls"].append(d10)
     chat_history.append((None, f"## Action Result: rolled a {d10}/10 🔷\n###  {action_results['short_version']}  \n"
@@ -76,19 +76,19 @@ def respond(button: str, chat_history, json_src: str, achievements: dict):
 
     # TODO: I think in the end this step makes the actions less impactful,
     #  As a player I often don't see much link between previous action and next options
-    # descriptions, json_output = GameNarrator.describe_current_situation(game_state)
+    # descriptions, json_output = narrator.describe_current_situation(game_state)
     # game_state.update([action_results["long_version"], descriptions["long_version"]])
     ## Then display resulting position
     # chat_history.append((None, f"## {descriptions['short_version']}\n{descriptions['long_version']}"))
     # yield "", "", "", chat_history, "", json_output
 
-    location, _ = GameNarrator.current_location(game_state)
-    objective, _ = GameNarrator.current_objective(game_state)
+    location, _ = narrator.current_location(game_state)
+    objective, _ = narrator.current_objective(game_state)
     game_state.update(None, location["short_version"], objective)
 
-    new_situation = GameNarrator.display_information(game_state)
+    new_situation = narrator.display_information(game_state)
     print(f"FINAL SITUATION: {new_situation}")
-    new_options, response = GameNarrator.generate_options(new_situation, action_results['long_version'])
+    new_options, response = narrator.generate_options(new_situation, action_results['long_version'])
     print(f"FINAL OPTIONS: {new_options}")
     yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, response
 
@@ -112,16 +112,17 @@ def update_image(chat_history, style):
 if __name__ == "__main__":
     print("Running game!")
     game_state = GameState(INTRO)
+    narrator = GameNarrator()
 
     if DEBUG_LOCAL_INIT:
         current_situation = {"long_version": INTRO}
         options = ["Do a barrel roll", "Dance him to death", "What would Jesus do???"]
         json_str = json.dumps(options)
-        current_info = GameNarrator.display_information(game_state)
+        current_info = narrator.display_information(game_state)
         initial_image = None
     else:
-        current_situation, _ = GameNarrator.describe_current_situation(game_state)
-        options, json_str = GameNarrator.generate_options(current_situation["long_version"])
+        current_situation, _ = narrator.describe_current_situation(game_state)
+        options, json_str = narrator.generate_options(current_situation["long_version"])
         current_info = "INFO"
         initial_image = text2image(current_situation["short_version"], fast=True)
 
