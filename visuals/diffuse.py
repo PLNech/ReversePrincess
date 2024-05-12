@@ -222,7 +222,7 @@ def text2image(story: str, style: str = "", fast=False, save: bool = True) -> Im
                .replace("\n", "")
                .replace("\t", "")
                .replace("\\", "")
-               .replace("/10", "") # Dice rolls don't make great filenames :')
+               .replace("/10", "")  # Dice rolls don't make great filenames :')
                .replace("/", "")
                )
         time = int(datetime.datetime.now().timestamp())

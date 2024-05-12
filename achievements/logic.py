@@ -35,7 +35,7 @@ def update_achievements(chat_history: list[list[Optional[str]]], state: dict) ->
     current_achievements = state.get("achievements", [])
     current = len(current_achievements)
     total = len(achievements_map)
-    achievement_text = f"# {count}/{total} Achievements unlocked! \n"
+    achievement_text = f"# {current}/{total} Achievements unlocked! \n"
     done = []
 
     if not current_achievements:
@@ -83,13 +83,12 @@ def check_rolls(state: dict) -> None:
 
 
 def check_sequence_achievements(state: dict) -> None:
-    sequence = "".join(str(i if i is not 10 else "@") for i in state["rolls"])
+    sequence = "".join(str(i if i != 10 else "@") for i in state["rolls"])
 
     for achievement in achievements_sequence:
-        if achievement.key not in state["achievements"]:
-            if achievement.sequence in sequence:
-                display(achievement.key)
-                state["achievements"][achievement.key] = True
+        if achievement.key not in state["achievements"] and achievement.sequence in sequence:
+            display(achievement.key)
+            state["achievements"][achievement.key] = True
 
 
 def check_history(chat_history: list[list[Optional[str]]], state: dict) -> None:
@@ -97,7 +96,7 @@ def check_history(chat_history: list[list[Optional[str]]], state: dict) -> None:
     fulltext = ",".join([t for h in chat_history for t in h if t is not None])
 
     for text in achievements_text:
-        if text.match(fulltext):
+        if text.key not in state["achievements"] and text.match(fulltext):
             display(text.key)
             state["achievements"][text.key] = True
 
@@ -107,13 +106,13 @@ def check_history(chat_history: list[list[Optional[str]]], state: dict) -> None:
             if word in fulltext:
                 print(f"Found {word} in history!")
                 score_ai_words += 1
-
     with open("./achievements/data/100_to_avoid.txt", "r") as f:
         words = [w.strip() for w in f.readlines() if not w.startswith("#")]
         for word in words:
             if word in fulltext:
                 print(f"Found {word} in history!")
                 score_ai_avoid += 1
+    # TODO Create achievements based on scores
     if score_ai_words > 0 or score_ai_avoid > 0:
         print(f"Found AI words! Total AI word scores: {score_ai_words}, {score_ai_avoid}")
 

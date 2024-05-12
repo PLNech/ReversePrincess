@@ -10,7 +10,7 @@ PRE_PROMPT = (
 INTRO = (
     f"This is the story of a lonely princess, locked away in the highest room of a tall castle.\n"
     f"In the tower lives a dragon that guard the castle. "
-    f"She was expecting her prince to save her and delve into, passing time by reading her various books.\n"
+    f"She was expecting her prince to save her, passing time by reading her various books.\n"
     # TODO: We'll bring back the fun parts of her history...
     f"But the poor lad is not a hero and is himself in need of help! She clearly is the stronger one. "
     f"This is it, she must escape the dungeon and rescue him!\n"
