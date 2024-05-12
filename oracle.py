@@ -91,4 +91,4 @@ class Oracle:
         print(f"\n\n\n{prompt}\n -> {response}")
         content = response["content"] if "content" in response else response
         content = content.strip("\n ")
-        return content, response
+        return content, response["content"] if "content" in response else response
