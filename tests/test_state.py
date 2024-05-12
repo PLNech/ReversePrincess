@@ -15,8 +15,9 @@ class TestIntro(TestCase):
 
     def test_update(self):
         game_state = GameState(TestIntro.INTRO)
-        game_state.update(["She is now in outer space floating above the Earth"],
-                          "Low-Earth Orbit", "Wants to land on the Moon!")
+        game_state.update(
+            ["She is now in outer space floating above the Earth"], "Low-Earth Orbit", "Wants to land on the Moon!"
+        )
         history = game_state.history_so_far()
 
         self.assertIn("outer space", history)

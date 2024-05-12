@@ -3,9 +3,9 @@ from semantic_text_similarity.models import ClinicalBertSimilarity, WebBertSimil
 
 class JudgeSimilarity:
     def __init__(self):
-        self.web = WebBertSimilarity(device='cpu', batch_size=10)
+        self.web = WebBertSimilarity(device="cpu", batch_size=10)
         # TODO: Compare wih clinical
-        self.clinical = ClinicalBertSimilarity(device='cpu', batch_size=10)
+        self.clinical = ClinicalBertSimilarity(device="cpu", batch_size=10)
 
     def similarity(self, a: str, b: str) -> float:
         x = [(a, b)]
@@ -20,15 +20,17 @@ class JudgeSimilarity:
         return [t for (t, s) in y if s > threshold], scores
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("YO Pythonista")
-    achievement_death_tests = ["The princess escaped alive",
-                               "The princess sneezed",
-                               "The princess is riding the dragon",
-                               "The princess exhales her last breath.",
-                               "The princess takes a handkerchief.",
-                               "The princess lost all her blood painfully until she was all dried like an old apricot",
-                               "The princess got her blood drunk by the vampire, becoming immortal"]
+    achievement_death_tests = [
+        "The princess escaped alive",
+        "The princess sneezed",
+        "The princess is riding the dragon",
+        "The princess exhales her last breath.",
+        "The princess takes a handkerchief.",
+        "The princess lost all her blood painfully until she was all dried like an old apricot",
+        "The princess got her blood drunk by the vampire, becoming immortal",
+    ]
 
     j = JudgeSimilarity()
     achievement = "The princess is dead. She cannot live again"

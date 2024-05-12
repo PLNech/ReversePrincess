@@ -1,4 +1,5 @@
 """Definitions for individual achievements."""
+
 from dataclasses import dataclass
 from functools import lru_cache
 
@@ -25,6 +26,7 @@ class Achievement:
 @dataclass
 class RollAchievement(Achievement):
     """An achievement which triggers on a specific roll."""
+
     trigger: int = -1
 
     def __init__(self, trigger: int, title: str, text: str, unlocked: bool = False):
@@ -40,7 +42,8 @@ class RollAchievement(Achievement):
 @dataclass
 class SequenceAchievement(Achievement):
     """An achievement which triggers on a specific sequence of rolls.
-    10s are represented as @ to avoid matching 1s. """
+    10s are represented as @ to avoid matching 1s."""
+
     sequence: str = "..."
 
     def __init__(self, sequence: str, title: str, text: str, unlocked: bool = False):
@@ -55,6 +58,7 @@ class SequenceAchievement(Achievement):
 @dataclass
 class TextAchievement(Achievement):
     """An achievement which triggers on a specific keyword/sentence in history."""
+
     keyword: str = "..."
     times: int = 1
 
@@ -65,7 +69,7 @@ class TextAchievement(Achievement):
         super().__init__(key, title, text, unlocked)
 
     def match(self, haystack: str) -> bool:
-        """ True if the haystack matches this achievement's setup."""
+        """True if the haystack matches this achievement's setup."""
         return self.counter(self.keyword, haystack) >= self.times
 
     @staticmethod
@@ -96,7 +100,6 @@ achievements_list: list[Achievement] = [
     SequenceAchievement("777", "🎰 777 🎰", "CASINO MODE! ALL PLAY IS NOW FREE 💸"),
     SequenceAchievement("@@", "💎 Double Ten 💎", "Diamond hands my dude!"),
     SequenceAchievement("@@@", "💎💎💎 TRIPLE TEN 💎💎💎", "WHAT ARE THE CHANCES!!1!"),
-
     # Keywords
     TextAchievement("delve", "Delve First 💡", "Delving like the pros my dude!"),
     TextAchievement("delve", "Delve the Second 👑", "Let's delve into bad speech habits.", 2),
@@ -107,9 +110,10 @@ achievements_map: dict[str, Achievement] = {a.key: a for a in achievements_list}
 achievements_rolls: list[RollAchievement] = [a for a in filter(lambda a: type(a) is RollAchievement, achievements_list)]
 achievements_text: list[TextAchievement] = [a for a in filter(lambda a: type(a) is TextAchievement, achievements_list)]
 achievements_sequence: list[SequenceAchievement] = [
-    a for a in filter(lambda a: type(a) is SequenceAchievement, achievements_list)]
+    a for a in filter(lambda a: type(a) is SequenceAchievement, achievements_list)
+]
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Achievements:")
     for a in achievements_list:
         print(a)

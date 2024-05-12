@@ -67,7 +67,7 @@ class CoTPipeline(dspy.Module):
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Example usage of optimized Locator:")
     model = CoTPipeline(LocatorSignature)
     model.forward("")
