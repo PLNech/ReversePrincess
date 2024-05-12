@@ -28,15 +28,20 @@ class GameNarrator:
             "You will generate a small part of the story, answering directly this request:\n"
         )
 
+    def intro(self) -> str:
+        return (
+            f"This is the story of a {self.story.mood} {self.story.character}, "
+            f"{self.story.situation} {self.story.goal}\n")
+
     def describe_current_situation(self, game_state: GameState, retries: int = 5) -> tuple[dict[str, str], str]:
         print("DESCRIBING SITUATION... ", end="")
         prompt = (
-            f"{self.pre_prompt} determine the current situation of the princess. "
+            f"{self.pre_prompt} determine the current situation of the {self.story.character}. "
             f"The story so far is the following: \n"
             f"{game_state.history_so_far()}\n"
-            f"The princess is currently at this location: {game_state.current_location}\n"
-            f"The princess has the following goal: {game_state.current_objective}\n"
-            f"Return a JSON object describing her current situation. "
+            f"The {self.story.character} is currently at this location: {game_state.current_location}\n"
+            f"The {self.story.character} has the following goal: {game_state.current_objective}\n"
+            f"Return a JSON object describing {self.story.pronouns} current situation. "
             f"You must include at top-level a 'short_version' under 8 words and a 'long_version' under 20 words."
         )
         for i in range(retries):
@@ -58,7 +63,7 @@ class GameNarrator:
 
     def generate_options(self, situation: str, last_action_results: Optional[str] = None,
                          retries: int = 5) -> tuple[list[str], str]:
-        prompt: str = (f"{self.pre_prompt} Generate three potential actions the princess could do now. "
+        prompt: str = (f"{self.pre_prompt} Generate three potential actions the {self.story.character} could do now. "
                        f"Was there an action before? {last_action_results}\n"
                        f"The current situation for the princess is the following:\n"
                        f"{situation}\n"
@@ -66,10 +71,11 @@ class GameNarrator:
                        f"with your three options under the key 'options', as an array of strings. "
                        f"Every option should be a short, complete subject-verb-object phrase with an action verb, under 15 words. "
                        "At least one option should be daring, or even perilous. "
-                       f"For example :\n"
-                       '{"options": ["She jumps from her hiding place and tries to open the cell door.", '
-                       '"She looks around for a solution to the puzzle.", '
-                       '"She waits for an opportunity to reason him."]}'
+                       # TODO: Do examples bias too much?
+                       # f"For example :\n"
+                       # '{"options": ["She jumps from her hiding place and tries to open the cell door.", '
+                       # '"She looks around for a solution to the puzzle.", '
+                       # '"She waits for an opportunity to reason him."]}'
                        )
         for _ in range(retries):
             try:
@@ -107,7 +113,7 @@ class GameNarrator:
             f"Return a JSON object describing the results of her action."
             f"You must include at top-level a 'short_version' under 20 words and a 'long_version' under 100 words."
         )
-        gr.Info(f"Describing action result: \"{action} -> {result}\"")
+        gr.Info(f"Simulating your action...")
         for i in range(retries):
             try:
                 prediction, source = Oracle.predict(prompt, is_json=True)
@@ -121,11 +127,11 @@ class GameNarrator:
 
     def current_location(self, game_state: GameState, retries: int = 5) -> tuple[dict[str, str], str]:
         print("LOCATING... ", end="")
-        gr.Info(f"Locating princess...")
+        gr.Info(f"Locating the {self.story.character}...")
         prompt = (
-            f"{self.pre_prompt} determine the current location of the princess within the story's environment. "
+            f"{self.pre_prompt} determine the current location of the {self.story.character} within the story's environment. "
             f"Given the following story:\n{game_state.history_so_far()}"
-            f"Where is the princess? Reply in a few words. Examples: \"In the wine cellar\", "
+            f"Where is the {self.story.character}? Reply in a few words. Examples: \"In the wine cellar\", "
             f"or \"On the roof under strong winds\", or \"In the kitchen\"."
             f"Return a JSON object describing her current location. "
             f"You must include at top-level a 'short_version' under 8 words "
@@ -144,10 +150,10 @@ class GameNarrator:
     def current_objective(self, game_state: GameState) -> tuple[str, str]:
         print("OBJECTIVE... ", end="")
         prompt = (
-            f"{self.pre_prompt} Determine the current goal of the princess."
+            f"{self.pre_prompt} Determine the current goal of the {self.story.character}."
             f"Given the following story :\n{game_state.history_so_far()}"
-            f"What is the short-term goal of the princess? Reply in a few words. Examples: \"Getting out of the room\","
-            f" or \"Opening the treasure chest\", or \"Solving the enigma\".\n"
+            f"What is the short-term goal of the {self.story.character}? Reply in a few words. "
+            f"Examples: \"Getting out of the room\", or \"Opening the treasure chest\", or \"Solving the enigma\".\n"
         )
         gr.Info(f"Clarifying goal...")
         prediction, source = Oracle.predict(prompt)
