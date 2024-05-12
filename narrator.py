@@ -20,9 +20,9 @@ class GameNarrator:
     def pre_prompt(self) -> str:
         return (
             f"You generate short story bits in simple english and write compelling adventure games "
-            f"made of few-sentence descriptions and actions. "
+            f"in a {self.story.ambiance} aesthetic made of few-sentence descriptions and actions. "
             f"You must always refer to the main character as {self.story.character} or {self.story.pronouns}, "
-            f"and always describe the scene in their third person subjective voice.\n"
+            f"and always describe the scene and actions in their {self.story.voice} subjective voice.\n"
             "When possible you use simple words from the basic english vocabulary "
             "to keep the story readable for kids.\n"
             "You will generate a small part of the story, answering directly this request:\n"
@@ -30,7 +30,7 @@ class GameNarrator:
 
     def intro(self) -> str:
         return (
-            f"This is the story of a {self.story.mood} {self.story.character}, "
+            f"This is the {self.story.ambiance} story of a {self.story.mood} {self.story.character}, "
             f"{self.story.situation} {self.story.goal}\n")
 
     def describe_current_situation(self, game_state: GameState, retries: int = 5) -> tuple[dict[str, str], str]:
@@ -65,7 +65,7 @@ class GameNarrator:
                          retries: int = 5) -> tuple[list[str], str]:
         prompt: str = (f"{self.pre_prompt} Generate three potential actions the {self.story.character} could do now. "
                        f"Was there an action before? {last_action_results}\n"
-                       f"The current situation for the princess is the following:\n"
+                       f"The current situation for the {self.story.character} is the following:\n"
                        f"{situation}\n"
                        f"What should she try? Generate three options and reply in valid JSON "
                        f"with your three options under the key 'options', as an array of strings. "
@@ -102,12 +102,12 @@ class GameNarrator:
         elif result_score > 2:
             result = "This action fails. There is now a new challenge to face."
         else:
-            result = "This action fails epic, putting the princess in big trouble to address immediately."
+            result = f"This action fails epic, putting the {self.story.character} in big trouble to address immediately."
 
         prompt = (
             f"{self.pre_prompt} Determine what happens after this action."
             f"The story so far:\n{game_state.history_so_far()}"
-            f"The princess chose to do: '{action}'\n"
+            f"The {self.story.character} chose to do: '{action}'\n"
             f"The result determined by a d10 dice roll was {result_score}/10: '{result}'\n"
             f"Describe what happens to her next in a maximum of three short sentences."
             f"Return a JSON object describing the results of her action."
