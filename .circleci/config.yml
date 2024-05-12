@@ -4,6 +4,18 @@ orbs:
   python: circleci/python@2.1.1
 
 jobs:
+  black:
+    docker:
+      - image: cimg/python:3.12
+
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: .circleci/requirements.txt
+      - run:
+          name: Check black formatting
+          command: black --check **/*.py --line-length=120
   build-and-test:
     docker:
       - image: cimg/python:3.12
@@ -20,4 +32,5 @@ jobs:
 workflows:
   testsuite:
     jobs:
+      - black
       - build-and-test
