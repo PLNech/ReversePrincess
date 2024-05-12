@@ -67,7 +67,7 @@ class GameNarrator:
             f"Was there an action before? {last_action_results}\n"
             f"The current situation for the {self.story.character} is the following:\n"
             f"{situation}\n"
-            f"What should she try? Generate three options and reply in valid JSON "
+            f"What should {self.story.pronouns} try? Generate three options and reply in valid JSON "
             f"with your three options under the key 'options', as an array of strings. "
             f"Every option should be a short, complete subject-verb-object phrase with an action verb, under 15 words. "
             "At least one option should be daring, or even perilous. "
