@@ -120,6 +120,7 @@ def text2image_v2(prompt: str, num_inference_steps: int = 150, height=512, width
     generator, pipe = init_v2(num_inference_steps)
 
     image = pipe(prompt, guidance_scale=7.5, height=height, width=width,
+                 negative_prompt="text, hands",
                  num_inference_steps=num_inference_steps, generator=generator).images[0]
 
     return image
