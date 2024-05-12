@@ -3,7 +3,7 @@ from typing import Optional
 
 import gradio as gr
 
-from achievements.definitions import achievements_map, achievements_rolls
+from achievements.definitions import achievements_map, achievements_rolls, achievements_sequence
 
 
 def display_raw(title: str, text: str):
@@ -16,6 +16,7 @@ def display(key: str):
     if key in achievements_map:
         achievement = achievements_map[key]
         display_raw(achievement.title, achievement.text)
+        achievement.unlocked = True
     else:
         gr.Error(f"Failed to find data for achievement \"{key}\"...")
 
@@ -31,9 +32,23 @@ def update_achievements(chat_history: list[list[Optional[str]]], state: dict) ->
     if chat_history is not None and len(chat_history) > 0:
         check_history(chat_history, state)
 
-    current_achievements = f"Current achievements: {state.get('achievements', None)}"
-    print(current_achievements)
-    return current_achievements
+    achievement_text = "# Achievements  \n"
+    current_achievements = state.get("achievements", None)
+
+    # VISIBLE ACHIEVEMENTS
+    # Rolls
+    achievement_text += "## Rolls  \n"
+    for roll in achievements_rolls:
+        if roll.key in current_achievements:
+            achievement_text += f"### 🔓 {roll.title}  \n{roll.text}  \n"
+    # Sequences
+    achievement_text += "## Sequences  \n"
+    for sequence in achievements_sequence:
+        if sequence.key in current_achievements:
+            achievement_text += f"### 🔓 {sequence.title}  \n{sequence.text}  \n"
+
+    # TODO SECRET ACHIEVEMENTS
+    return achievement_text
 
 
 def check_rolls(state: dict) -> None:
@@ -48,40 +63,11 @@ def check_rolls(state: dict) -> None:
 def check_sequence_achievements(state: dict) -> None:
     sequence = "".join(str(i) for i in state["rolls"])
 
-    if "roll_111" not in state["achievements"]:
-        if "111" in sequence:
-            display_raw("Epic fail", "Worst. Game. Ever.")
-            state["achievements"]["roll_111"] = True
-
-    if "roll_123" not in state["achievements"]:
-        if "123" in sequence:
-            display_raw("Et 1, et 2, et 3", "One Two Three? 🥙🔥🏟️")
-            state["achievements"]["roll_123"] = True
-
-    if "roll_420" not in state["achievements"]:
-        if "420" in sequence:
-            display_raw("4:20 my dude", "HIGH AS A KITE")
-            state["achievements"]["roll_420"] = True
-
-    if "roll_421" not in state["achievements"]:
-        if "421" in sequence:
-            display_raw("Un p'tit 421 ?", "I'd rather be playing dice lol")
-            state["achievements"]["roll_421"] = True
-
-    if "roll_555" not in state["achievements"]:
-        if "555" in sequence:
-            display_raw("555", "🎸 if you're 5-5-5 I'm 666 🤟")
-            state["achievements"]["roll_555"] = True
-
-    if "roll_666" not in state["achievements"]:
-        if "666" in sequence:
-            display_raw("666 🦹", "Diabolically partial success!")
-            state["achievements"]["roll_666"] = True
-
-    if "roll_777" not in state["achievements"]:
-        if "777" in sequence:
-            display_raw("🎰 777 🎰", "CASINO MODE! ALL PLAY IS NOW FREE 💸")
-            state["achievements"]["roll_777"] = True
+    for achievement in achievements_sequence:
+        if achievement.key not in state["achievements"]:
+            if achievement.sequence in sequence:
+                display(achievement.key)
+                state["achievements"][achievement.key] = True
 
 
 def check_history(chat_history: list[list[Optional[str]]], state: dict) -> None:
