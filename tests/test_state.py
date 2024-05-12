@@ -1,17 +1,20 @@
 from unittest import TestCase
 
-from prompts import INTRO
+from narrator import GameNarrator
 from state import GameState
 
 
 class TestIntro(TestCase):
+    narrator = GameNarrator()
+    INTRO = narrator.intro()
+
     def test_intro(self):
-        game_state = GameState(INTRO)
+        game_state = GameState(TestIntro.INTRO)
         history = game_state.history_so_far()
         self.assertGreater(len(history), 100)
 
     def test_update(self):
-        game_state = GameState(INTRO)
+        game_state = GameState(TestIntro.INTRO)
         game_state.update(["She is now in outer space floating above the Earth"],
                           "Low-Earth Orbit", "Wants to land on the Moon!")
         history = game_state.history_so_far()

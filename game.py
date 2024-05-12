@@ -10,8 +10,9 @@ from achievements.logic import init_achievements
 from achievements.logic import update_achievements
 from narrator import GameNarrator
 from oracle import choose_model
-from prompts import INTRO, IMAGE_STYLE_NAMES, IMAGE_STYLES, IMAGE_STYLE_DEFAULT
+from prompts import IMAGE_STYLE_NAMES, IMAGE_STYLES, IMAGE_STYLE_DEFAULT
 from state import GameState
+from stories.story import story_cat_moon
 from visuals.diffuse import text2image
 
 DEBUG_LOCAL_INIT = False
@@ -111,11 +112,12 @@ def update_image(chat_history, style):
 
 if __name__ == "__main__":
     print("Running game!")
-    game_state = GameState(INTRO)
-    narrator = GameNarrator()
+    narrator = GameNarrator(story=story_cat_moon)
+    intro = narrator.intro()
+    game_state = GameState(intro, narrator.story.situation, narrator.story.goal)
 
     if DEBUG_LOCAL_INIT:
-        current_situation = {"long_version": INTRO}
+        current_situation = {"long_version": intro}
         options = ["Do a barrel roll", "Dance him to death", "What would Jesus do???"]
         json_str = json.dumps(options)
         current_info = narrator.display_information(game_state)
@@ -146,7 +148,7 @@ if __name__ == "__main__":
                         chatbot = gr.Chatbot(
                             label="Damsell in Prowess",
                             elem_classes=["box_chatbot"],
-                            value=[[None, INTRO]],
+                            value=[[None, intro]],
                             scale=3,
                             height=512
                         )
@@ -171,7 +173,7 @@ if __name__ == "__main__":
                         illustration = gr.Image(show_label=False, value=initial_image, interactive=False)
                         json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
             with gr.Tab(label="Achievements"):
-                    achievements_display = gr.Markdown()
+                achievements_display = gr.Markdown()
 
         outputs = [action1, action2, action3, chatbot, situation, json_view]
         inputs = [chatbot, json_view, achievements_store]

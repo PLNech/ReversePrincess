@@ -3,11 +3,11 @@ from typing import Optional
 
 class GameState:
     history: list = []
-    current_location: str = "The first room"
-    current_objective: str = "Get out of her room"
 
-    def __init__(self, introduction: str):
+    def __init__(self, introduction: str, location: str = "The first room", objective: str = "Get out of her room"):
         self.history.append(introduction)
+        self.current_location: str = location
+        self.current_objective: str = objective
 
     def history_so_far(self) -> str:
         return "\n".join(x for x in self.history) + "\n"
