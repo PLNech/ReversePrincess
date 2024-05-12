@@ -31,7 +31,8 @@ class GameNarrator:
     def intro(self) -> str:
         return (
             f"This is the {self.story.ambiance} story of a {self.story.mood} {self.story.character}, "
-            f"{self.story.situation} {self.story.goal}\n")
+            f"{self.story.situation} {self.story.goal}\n"
+        )
 
     def describe_current_situation(self, game_state: GameState, retries: int = 5) -> tuple[dict[str, str], str]:
         print("DESCRIBING SITUATION... ", end="")
@@ -56,27 +57,26 @@ class GameNarrator:
 
     @staticmethod
     def display_information(game_state: GameState) -> str:
-        return (
-            f"Location: {game_state.current_location}\n"
-            f"Objective: {game_state.current_objective}\n"
-        )
+        return f"Location: {game_state.current_location}\n" f"Objective: {game_state.current_objective}\n"
 
-    def generate_options(self, situation: str, last_action_results: Optional[str] = None,
-                         retries: int = 5) -> tuple[list[str], str]:
-        prompt: str = (f"{self.pre_prompt} Generate three potential actions the {self.story.character} could do now. "
-                       f"Was there an action before? {last_action_results}\n"
-                       f"The current situation for the {self.story.character} is the following:\n"
-                       f"{situation}\n"
-                       f"What should she try? Generate three options and reply in valid JSON "
-                       f"with your three options under the key 'options', as an array of strings. "
-                       f"Every option should be a short, complete subject-verb-object phrase with an action verb, under 15 words. "
-                       "At least one option should be daring, or even perilous. "
-                       # TODO: Do examples bias too much?
-                       # f"For example :\n"
-                       # '{"options": ["She jumps from her hiding place and tries to open the cell door.", '
-                       # '"She looks around for a solution to the puzzle.", '
-                       # '"She waits for an opportunity to reason him."]}'
-                       )
+    def generate_options(
+        self, situation: str, last_action_results: Optional[str] = None, retries: int = 5
+    ) -> tuple[list[str], str]:
+        prompt: str = (
+            f"{self.pre_prompt} Generate three potential actions the {self.story.character} could do now. "
+            f"Was there an action before? {last_action_results}\n"
+            f"The current situation for the {self.story.character} is the following:\n"
+            f"{situation}\n"
+            f"What should she try? Generate three options and reply in valid JSON "
+            f"with your three options under the key 'options', as an array of strings. "
+            f"Every option should be a short, complete subject-verb-object phrase with an action verb, under 15 words. "
+            "At least one option should be daring, or even perilous. "
+            # TODO: Do examples bias too much?
+            # f"For example :\n"
+            # '{"options": ["She jumps from her hiding place and tries to open the cell door.", '
+            # '"She looks around for a solution to the puzzle.", '
+            # '"She waits for an opportunity to reason him."]}'
+        )
         for _ in range(retries):
             try:
                 options, response = Oracle.predict(prompt, is_json=True)
@@ -89,8 +89,9 @@ class GameNarrator:
                 continue
         raise SystemError(f"Failed to generate options after {retries} retries...")
 
-    def describe_action_result(self, game_state: GameState, action: str, retries: int = 5) -> tuple[
-        dict[str, str], str, int]:
+    def describe_action_result(
+        self, game_state: GameState, action: str, retries: int = 5
+    ) -> tuple[dict[str, str], str, int]:
         print("DESCRIBING ACTION... ", end="")
         result_score = random.randint(1, 10)
         if result_score > 9:
@@ -102,7 +103,9 @@ class GameNarrator:
         elif result_score > 2:
             result = "This action fails. There is now a new challenge to face."
         else:
-            result = f"This action fails epic, putting the {self.story.character} in big trouble to address immediately."
+            result = (
+                f"This action fails epic, putting the {self.story.character} in big trouble to address immediately."
+            )
 
         prompt = (
             f"{self.pre_prompt} Determine what happens after this action."
@@ -131,8 +134,8 @@ class GameNarrator:
         prompt = (
             f"{self.pre_prompt} determine the current location of the {self.story.character} within the story's environment. "
             f"Given the following story:\n{game_state.history_so_far()}"
-            f"Where is the {self.story.character}? Reply in a few words. Examples: \"In the wine cellar\", "
-            f"or \"On the roof under strong winds\", or \"In the kitchen\"."
+            f'Where is the {self.story.character}? Reply in a few words. Examples: "In the wine cellar", '
+            f'or "On the roof under strong winds", or "In the kitchen".'
             f"Return a JSON object describing her current location. "
             f"You must include at top-level a 'short_version' under 8 words "
             f"and a 'long_version' under 20 words."
@@ -153,7 +156,7 @@ class GameNarrator:
             f"{self.pre_prompt} Determine the current goal of the {self.story.character}."
             f"Given the following story :\n{game_state.history_so_far()}"
             f"What is the short-term goal of the {self.story.character}? Reply in a few words. "
-            f"Examples: \"Getting out of the room\", or \"Opening the treasure chest\", or \"Solving the enigma\".\n"
+            f'Examples: "Getting out of the room", or "Opening the treasure chest", or "Solving the enigma".\n'
         )
         gr.Info(f"Clarifying goal...")
         prediction, source = Oracle.predict(prompt)

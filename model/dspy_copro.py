@@ -42,28 +42,32 @@ ALL_HISTORIES = [HISTORY_INTRO, HISTORY_STANDARD, HISTORY_STANDARD_FULL]
 LOCATION = "Starting point"
 OBJECTIVE = "Escape then save the prince"
 
-TASK_SITUATION = ("determine the current situation of the princess."
-                  "Return a JSON object describing her current situation. You must include at top-level "
-                  "a 'short_description' under 20 words and a 'long_description' under 100 words."
-                  )
-TASK_LOCATION = ("determine the current location of the princess."
-                 "Where is the princess? Reply in a few words. Examples: \"In the wine cellar\", "
-                 "or \"On the roof under strong winds\", or \"In the kitchen\"."
-                 "Return a JSON object describing her current location. You must include at top-level "
-                 "a 'short_description' under 20 words and a 'long_description' under 100 words."
-                 )
-TASK_GOAL = ("determine the current goal of the princess."
-             "What is the short-term goal of the princess? Reply in a few words. "
-             "Examples: \"Getting out of the room\", or \"Opening the treasure chest\", or \"Solving the enigma\".\n")
+TASK_SITUATION = (
+    "determine the current situation of the princess."
+    "Return a JSON object describing her current situation. You must include at top-level "
+    "a 'short_description' under 20 words and a 'long_description' under 100 words."
+)
+TASK_LOCATION = (
+    "determine the current location of the princess."
+    'Where is the princess? Reply in a few words. Examples: "In the wine cellar", '
+    'or "On the roof under strong winds", or "In the kitchen".'
+    "Return a JSON object describing her current location. You must include at top-level "
+    "a 'short_description' under 20 words and a 'long_description' under 100 words."
+)
+TASK_GOAL = (
+    "determine the current goal of the princess."
+    "What is the short-term goal of the princess? Reply in a few words. "
+    'Examples: "Getting out of the room", or "Opening the treasure chest", or "Solving the enigma".\n'
+)
 ALL_TASKS = [TASK_SITUATION, TASK_LOCATION, TASK_GOAL]
-dev_raw = [[(history, LOCATION, OBJECTIVE)]
-           for history in ALL_HISTORIES
-           ]
+dev_raw = [[(history, LOCATION, OBJECTIVE)] for history in ALL_HISTORIES]
 print(f"Loaded dataset with {len(dev_raw)} samples.")
 
-dev = [dspy.Example(story=story, location=location, objective=objective)
-       .with_inputs("story", "location", "objective")
-       for raw in dev_raw for (story, location, objective) in raw]
+dev = [
+    dspy.Example(story=story, location=location, objective=objective).with_inputs("story", "location", "objective")
+    for raw in dev_raw
+    for (story, location, objective) in raw
+]
 
 
 def my_copro():
@@ -74,7 +78,7 @@ def my_copro():
 
     @lru_cache(maxsize=100)
     def validate_readable(_: Example, pred: Prediction, trace=None) -> float:
-        """ True if the text is at least fairly easy to read.
+        """True if the text is at least fairly easy to read.
 
         Returns:
             A normalized (0.0-1.0) Flesch score.
@@ -83,7 +87,7 @@ def my_copro():
 
     @lru_cache(maxsize=100)
     def validate_short(_: Example, pred: Prediction, trace=None) -> float:
-        """ True if the text is quick to read.
+        """True if the text is quick to read.
 
         Returns:
             An inverted reading time in seconds:
@@ -108,14 +112,18 @@ def my_copro():
 
     NUM_THREADS = 5
     print("Evaluating raw COT model..")
-    evaluate = Evaluate(devset=dev, metric=validate_short, num_threads=NUM_THREADS,
-                        display_progress=True, display_table=False)
+    evaluate = Evaluate(
+        devset=dev, metric=validate_short, num_threads=NUM_THREADS, display_progress=True, display_table=False
+    )
     signature = SituatorSignature
     baseline = CoTPipeline(signature)
 
-    devset_with_input = [dspy.Example(
-        {key: r[key] for key in ["story", "location", "objective"]}
-    ).with_inputs("story", "location", "objective") for r in dev]
+    devset_with_input = [
+        dspy.Example({key: r[key] for key in ["story", "location", "objective"]}).with_inputs(
+            "story", "location", "objective"
+        )
+        for r in dev
+    ]
     evaluate(baseline, devset=devset_with_input)
 
     from dspy.teleprompt import COPRO
@@ -126,8 +134,9 @@ def my_copro():
         verbose=True,
     )
 
-    kwargs = dict(num_threads=64, display_progress=True,
-                  display_table=0)  # Used in Evaluate class in the optimization process
+    kwargs = dict(
+        num_threads=64, display_progress=True, display_table=0
+    )  # Used in Evaluate class in the optimization process
 
     print(f"Running COPRO prompt optimizer! Depth={optimizer.depth}, model={optimizer.prompt_model}")
     compiled_prompt_opt: CoTPipeline = optimizer.compile(baseline, trainset=dev, eval_kwargs=kwargs)
@@ -170,6 +179,6 @@ def my_copro():
     # And now you have a more powerful predictor with more optimized Signature!
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # main_copro()
     my_copro()

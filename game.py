@@ -70,9 +70,13 @@ def respond(button: str, chat_history, json_src: str, achievements: dict):
     action_results, json_output, d10 = narrator.describe_action_result(game_state, button)
     game_state.update([action_results["short_version"], action_results["long_version"]])
     achievements["rolls"].append(d10)
-    chat_history.append((None, f"## Action Result: rolled a {d10}/10 🔷\n###  {action_results['short_version']}  \n"
-                               f"{action_results['long_version']}"
-                         ))  # Display action result
+    chat_history.append(
+        (
+            None,
+            f"## Action Result: rolled a {d10}/10 🔷\n###  {action_results['short_version']}  \n"
+            f"{action_results['long_version']}",
+        )
+    )  # Display action result
     yield "", "", "", chat_history, "", json_output
 
     # TODO: I think in the end this step makes the actions less impactful,
@@ -89,7 +93,7 @@ def respond(button: str, chat_history, json_src: str, achievements: dict):
 
     new_situation = narrator.display_information(game_state)
     print(f"FINAL SITUATION: {new_situation}")
-    new_options, response = narrator.generate_options(new_situation, action_results['long_version'])
+    new_options, response = narrator.generate_options(new_situation, action_results["long_version"])
     print(f"FINAL OPTIONS: {new_options}")
     yield new_options[0], new_options[1], new_options[2], chat_history, new_situation, response
 
@@ -133,12 +137,10 @@ if __name__ == "__main__":
         text_size="md",
         spacing_size="lg",
         radius_size="lg",
-    ).set(
-        body_background_fill='*block_background_fill',
-        body_text_size='*text_lg'
-    )
-    with gr.Blocks(title="Reverse Princess Simulator", css="footer{display:none !important}",
-                   theme=theme, analytics_enabled=False) as demo:
+    ).set(body_background_fill="*block_background_fill", body_text_size="*text_lg")
+    with gr.Blocks(
+        title="Reverse Princess Simulator", css="footer{display:none !important}", theme=theme, analytics_enabled=False
+    ) as demo:
         achievements_store: gr.State = init_achievements()
 
         with gr.Tabs() as tabs:
@@ -150,7 +152,7 @@ if __name__ == "__main__":
                             elem_classes=["box_chatbot"],
                             value=[[None, intro]],
                             scale=3,
-                            height=512
+                            height=512,
                         )
 
                         with gr.Row(elem_classes=["box_buttons"]) as row2:
@@ -168,8 +170,12 @@ if __name__ == "__main__":
                             scale=1,
                         )
 
-                        image_style = gr.Dropdown(label="Illustration style", interactive=True,
-                                                  choices=IMAGE_STYLE_NAMES, value=IMAGE_STYLE_DEFAULT)
+                        image_style = gr.Dropdown(
+                            label="Illustration style",
+                            interactive=True,
+                            choices=IMAGE_STYLE_NAMES,
+                            value=IMAGE_STYLE_DEFAULT,
+                        )
                         illustration = gr.Image(show_label=False, value=initial_image, interactive=False)
                         json_view = gr.Json(value=json_str, label="Last oracle reply", scale=2)
             with gr.Tab(label="Achievements"):

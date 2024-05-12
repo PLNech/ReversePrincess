@@ -18,7 +18,7 @@ def display(key: str):
         display_raw(achievement.title, achievement.text)
         achievement.unlocked = True
     else:
-        gr.Error(f"Failed to find data for achievement \"{key}\"...")
+        gr.Error(f'Failed to find data for achievement "{key}"...')
 
 
 def update_achievements(chat_history: list[list[Optional[str]]], state: dict) -> str:

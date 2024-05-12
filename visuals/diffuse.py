@@ -15,7 +15,7 @@ from prompts import IMAGE_STYLES
 def wrap_story(story: str, style: str = "") -> str:
     # Warning: we put story at the end as truncation might occur
     # ( The following part of your input was truncated because CLIP can only handle sequences up to 77 tokens)
-    story = story.replace(',', ' ')
+    story = story.replace(",", " ")
 
     focus = "no text, WS wide shot large perspective, wide-angle view"
 
@@ -28,9 +28,7 @@ def text2image_manual(prompt: str) -> Image:
     text_encoder = CLIPTextModel.from_pretrained(
         "CompVis/stable-diffusion-v1-4", subfolder="text_encoder", use_safetensors=True
     )
-    unet = UNet2DConditionModel.from_pretrained(
-        "CompVis/stable-diffusion-v1-4", subfolder="unet", use_safetensors=True
-    )
+    unet = UNet2DConditionModel.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="unet", use_safetensors=True)
     from diffusers import UniPCMultistepScheduler
 
     # To speed up inference, move the models to a GPU since, unlike the scheduler, they have trainable weights:
@@ -119,9 +117,15 @@ def text2image_v2(prompt: str, num_inference_steps: int = 150, height=512, width
     print(f"Running T2I v2: {prompt}")
     generator, pipe = init_v2(num_inference_steps)
 
-    image = pipe(prompt, guidance_scale=7.5, height=height, width=width,
-                 negative_prompt="text, hands",
-                 num_inference_steps=num_inference_steps, generator=generator).images[0]
+    image = pipe(
+        prompt,
+        guidance_scale=7.5,
+        height=height,
+        width=width,
+        negative_prompt="text, hands",
+        num_inference_steps=num_inference_steps,
+        generator=generator,
+    ).images[0]
 
     return image
 
@@ -148,6 +152,7 @@ def text2image_hyper(prompt: str, num_inference_steps: int = 1) -> Image:
     import torch
     from diffusers import DiffusionPipeline, TCDScheduler
     from huggingface_hub import hf_hub_download
+
     base_model_id = "stabilityai/stable-diffusion-xl-base-1.0"
     repo_name = "ByteDance/Hyper-SD"
     ckpt_name = "Hyper-SDXL-1step-lora.safetensors"
@@ -173,8 +178,10 @@ def text2image_peft(prompt: str, num_inference_steps: int = 100) -> Image:
     # Perform inference.
     # Notice how the prompt is constructed.
     image = pipe(
-        prompt, num_inference_steps=num_inference_steps, cross_attention_kwargs={"scale": 1.0},
-        generator=torch.manual_seed(0)
+        prompt,
+        num_inference_steps=num_inference_steps,
+        cross_attention_kwargs={"scale": 1.0},
+        generator=torch.manual_seed(0),
     ).images[0]
 
     return image
@@ -183,6 +190,7 @@ def text2image_peft(prompt: str, num_inference_steps: int = 100) -> Image:
 def upscale(prompt: str, image: Image) -> Image:
     from diffusers import StableDiffusionUpscalePipeline
     import torch
+
     print(f"Upscaling image with prompt {prompt}...")
 
     # load model and scheduler
@@ -212,19 +220,20 @@ def text2image(story: str, style: str = "", fast=False, save: bool = True) -> Im
     prompt = wrap_story(story, style)
     image: Image = text2image_v2(prompt, 50 if fast else 150)
     if save:
-        key = (f"{story[:80]}".strip()
-               .replace(" ", "_")
-               .replace("#", "")
-               .replace(",", "")
-               .replace(":", "")
-               .replace(";", "")
-               .replace(".", "")
-               .replace("\n", "")
-               .replace("\t", "")
-               .replace("\\", "")
-               .replace("/10", "")  # Dice rolls don't make great filenames :')
-               .replace("/", "")
-               )
+        key = (
+            f"{story[:80]}".strip()
+            .replace(" ", "_")
+            .replace("#", "")
+            .replace(",", "")
+            .replace(":", "")
+            .replace(";", "")
+            .replace(".", "")
+            .replace("\n", "")
+            .replace("\t", "")
+            .replace("\\", "")
+            .replace("/10", "")  # Dice rolls don't make great filenames :')
+            .replace("/", "")
+        )
         time = int(datetime.datetime.now().timestamp())
         if not os.path.exists("./generated/images/"):
             os.mkdir("./generated/images/")
@@ -241,5 +250,5 @@ def main_diffusion():
     # mugshot.save("mugshot.png")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main_diffusion()
