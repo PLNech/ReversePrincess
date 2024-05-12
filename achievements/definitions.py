@@ -39,7 +39,8 @@ class RollAchievement(Achievement):
 
 @dataclass
 class SequenceAchievement(Achievement):
-    """An achievement which triggers on a specific sequence of rolls."""
+    """An achievement which triggers on a specific sequence of rolls.
+    10s are represented as @ to avoid matching 1s. """
     sequence: str = "..."
 
     def __init__(self, sequence: str, title: str, text: str, unlocked: bool = False):
@@ -93,6 +94,9 @@ achievements_list: list[Achievement] = [
     SequenceAchievement("555", "555 🔥", "🎸 if you're 5-5-5 I'm 666 🤟"),
     SequenceAchievement("666", "666 🦹", "Diabolically partial success!"),
     SequenceAchievement("777", "🎰 777 🎰", "CASINO MODE! ALL PLAY IS NOW FREE 💸"),
+    SequenceAchievement("@@", "💎 Double Ten 💎", "Diamond hands my dude!"),
+    SequenceAchievement("@@@", "💎💎💎 TRIPLE TEN 💎💎💎", "WHAT ARE THE CHANCES!!1!"),
+
     # Keywords
     TextAchievement("delve", "Delve First 💡", "Delving like the pros my dude!"),
     TextAchievement("delve", "Delve the Second 👑", "Let's delve into bad speech habits.", 2),

@@ -32,8 +32,10 @@ def update_achievements(chat_history: list[list[Optional[str]]], state: dict) ->
     if chat_history is not None and len(chat_history) > 0:
         check_history(chat_history, state)
 
-    achievement_text = "# Achievements  \n"
     current_achievements = state.get("achievements", [])
+    current = len(current_achievements)
+    total = len(achievements_map)
+    achievement_text = f"# {count}/{total} Achievements unlocked! \n"
     done = []
 
     if not current_achievements:
@@ -81,7 +83,7 @@ def check_rolls(state: dict) -> None:
 
 
 def check_sequence_achievements(state: dict) -> None:
-    sequence = "".join(str(i) for i in state["rolls"])
+    sequence = "".join(str(i if i is not 10 else "@") for i in state["rolls"])
 
     for achievement in achievements_sequence:
         if achievement.key not in state["achievements"]:
