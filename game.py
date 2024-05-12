@@ -12,6 +12,7 @@ from narrator import GameNarrator
 from oracle import choose_model
 from prompts import IMAGE_STYLE_NAMES, IMAGE_STYLES, IMAGE_STYLE_DEFAULT
 from state import GameState
+from stories.story import story_rforest
 from visuals.diffuse import text2image
 
 DEBUG_LOCAL_INIT = False
@@ -111,7 +112,7 @@ def update_image(chat_history, style):
 
 if __name__ == "__main__":
     print("Running game!")
-    narrator = GameNarrator()  # Or e.g. (story=story_cat_moon)
+    narrator = GameNarrator(story=story_rforest)  # Or e.g. (story=story_cat_moon)
     intro = narrator.intro()
     game_state = GameState(intro, narrator.story.situation, narrator.story.goal)
 
