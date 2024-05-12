@@ -14,18 +14,7 @@ from prompts import INTRO, IMAGE_STYLE_NAMES, IMAGE_STYLES, IMAGE_STYLE_DEFAULT
 from state import GameState
 from visuals.diffuse import text2image
 
-PROMPT_INTRO = (
-    "The year is 1900 and the whole western world is delighted by the Paris _Exposition Universelle_. "
-    "But you are a princess, and you're imprisoned by a bad guy in a Hotel Particulier in Paris!"
-    "And worse, your beloved prince got trapped - he doesn't seem so good at saving anyone, even his ass. "
-    "Can you escape the castle to go rescue this cute loser?"
-    "\n You start your journey in the following room:"
-)
-SYSTEM = "You are a story generator."
-BUTTON_BEGIN = "Once upon a time, the princess was locked in"
-
 DEBUG_LOCAL_INIT = False
-SAVE = True
 
 
 def vote(data: gr.LikeData):
