@@ -5,7 +5,8 @@ in the style of , Marvel DC comics, accent lighting,
 
 IMAGE_STYLES = {
     "TIMELESS": "timeless child book illustration, bright watercolor, aged book, cute illustration",
-    "PIXELS": "low-resolution pixel art, dark background lofi rendering",
+    "PIXELS": "pixel art character, in full body view, Modern Line Icon, Vector Line Art, Icon Design, "
+              "Bold Outline, Solid Color, Pixel Perfect, Isolate, black background, Minimalistic, Bold Colors",
     "ENKI": "in the style of enki bilal, Enki Bilal's style, futuristic tones, watercolor pencils, best quality",
     "MOEBIUS": "comicbook, art by Moebius, cyberpunk comic, bold coloring, accent lighting, elegant complex picture",
 }

@@ -93,6 +93,7 @@ achievements_list: list[Achievement] = [
     SequenceAchievement("13", "Hey you :3", "It's dangerous to go alone, take this 🍀"),
     SequenceAchievement("00", "Double Zero 🎯", "What are the chances??"),
     SequenceAchievement("007", "Agent Bond 🔫", "Quite a bad roll though"),
+    SequenceAchievement("123", "One Two Three", "Viva 🇩🇿"),
     SequenceAchievement("420", "4:20 my dude", "HIGH AS A KITE"),
     SequenceAchievement("421", "Un p'tit 421 ?", "I'd rather be playing dice lol"),
     SequenceAchievement("555", "555 🔥", "🎸 if you're 5-5-5 I'm 666 🤟"),

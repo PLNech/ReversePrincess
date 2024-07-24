@@ -56,7 +56,7 @@ story_cat_moon = Story(
     situation="on the moon exploring our satellite. When she heard it is made of cheese, "
     "thus maybe full of mice running around waiting to be caught, she learned "
     "how to build and navigate a rocket then landed on the Moon for a night of fun.",
-    ambiance="goofy",
+    ambiance="goofy and playful",
     goal="She wants to reach the melting cheese core of the Moon and swim in the celestial fondue",
 )
 

@@ -1,9 +1,10 @@
 import datetime
 import os.path
 from functools import lru_cache
+from typing import Optional
 
 import torch
-from PIL import Image
+from PIL.Image import Image
 from diffusers import AutoencoderKL, UNet2DConditionModel, DiffusionPipeline
 from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 from numpy.random import randint
@@ -215,30 +216,34 @@ def load_lora_pipe():
     return pipe
 
 
-def text2image(story: str, style: str = "", fast=False, save: bool = True) -> Image:
+def text2image(story: str, style: str = "", fast=False, save: bool = True) -> Optional[Image]:
     """Use our current best text2image model, with wrapping of story."""
-    prompt = wrap_story(story, style)
-    image: Image = text2image_v2(prompt, 50 if fast else 150)
-    if save:
-        key = (
-            f"{story[:80]}".strip()
-            .replace(" ", "_")
-            .replace("#", "")
-            .replace(",", "")
-            .replace(":", "")
-            .replace(";", "")
-            .replace(".", "")
-            .replace("\n", "")
-            .replace("\t", "")
-            .replace("\\", "")
-            .replace("/10", "")  # Dice rolls don't make great filenames :')
-            .replace("/", "")
-        )
-        time = int(datetime.datetime.now().timestamp())
-        if not os.path.exists("./generated/images/"):
-            os.mkdir("./generated/images/")
-        image.save(f"./generated/images/{key}_{time}.png")
-    return image
+    try:
+        prompt = wrap_story(story, style)
+        image: Image = text2image_v2(prompt, 50 if fast else 150)
+        if save:
+            key = (
+                f"{story[:80]}".strip()
+                .replace(" ", "_")
+                .replace("#", "")
+                .replace(",", "")
+                .replace(":", "")
+                .replace(";", "")
+                .replace(".", "")
+                .replace("\n", "")
+                .replace("\t", "")
+                .replace("\\", "")
+                .replace("/10", "")  # Dice rolls don't make great filenames :')
+                .replace("/", "")
+            )
+            time = int(datetime.datetime.now().timestamp())
+            if not os.path.exists("./generated/images/"):
+                os.mkdir("./generated/images/")
+            image.save(f"./generated/images/{key}_{time}.png")
+        return image
+    except Exception as e:
+        print(f"Error generating image: {e}")
+        return None  # No big deal
 
 
 def main_diffusion():

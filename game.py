@@ -12,7 +12,7 @@ from narrator import GameNarrator
 from oracle import choose_model
 from prompts import IMAGE_STYLE_NAMES, IMAGE_STYLES, IMAGE_STYLE_DEFAULT
 from state import GameState
-from stories.story import story_rforest
+from stories.story import story_cat_moon, story_rforest, Story
 from visuals.diffuse import text2image
 
 DEBUG_LOCAL_INIT = False
@@ -114,6 +114,10 @@ def update_image(chat_history, style):
     return image
 
 
+def generate_caption(story: Story, situation: str) -> str:
+    return f"The player character {story.character} is {story.mood} - {story.pronouns} situation {current_situation['short_version']}"
+
+
 if __name__ == "__main__":
     print("Running game!")
     narrator = GameNarrator(story=story_rforest)  # Or e.g. (story=story_cat_moon)
@@ -130,7 +134,7 @@ if __name__ == "__main__":
         current_situation, _ = narrator.describe_current_situation(game_state)
         options, json_str = narrator.generate_options(current_situation["long_version"])
         current_info = "INFO"
-        initial_image = text2image(current_situation["short_version"], fast=True)
+        initial_image = text2image(generate_caption(story=narrator.story, situation=current_situation["short_version"]), fast=True)
 
     # Theme quickly generated using https://www.gradio.app/guides/theming-guide - try it and change some more!
     theme = gr.themes.Soft(
@@ -139,7 +143,8 @@ if __name__ == "__main__":
         radius_size="lg",
     ).set(body_background_fill="*block_background_fill", body_text_size="*text_lg")
     with gr.Blocks(
-        title="Reverse Princess Simulator", css="footer{display:none !important}", theme=theme, analytics_enabled=False
+            title="Reverse Princess Simulator", css="footer{display:none !important}", theme=theme,
+            analytics_enabled=False
     ) as demo:
         achievements_store: gr.State = init_achievements()
 
@@ -152,7 +157,7 @@ if __name__ == "__main__":
                             elem_classes=["box_chatbot"],
                             value=[[None, intro]],
                             scale=3,
-                            height=512,
+                            height="80%",
                         )
 
                         with gr.Row(elem_classes=["box_buttons"]) as row2:
@@ -189,7 +194,8 @@ if __name__ == "__main__":
         action3.click(respond, [action3, *inputs], outputs)
 
         chatbot.change(update_image, [chatbot, image_style], illustration)
-        chatbot.change(update_achievements, [chatbot, achievements_store], [achievements_display])
+        chatbot.change(update_achievements, [chatbot, achievements_store], [achievements_display],
+                       show_progress="minimal")
 
     demo.queue()
     demo.launch(allowed_paths=["static/"], favicon_path="static/princess.ico")
